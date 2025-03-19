@@ -1,30 +1,44 @@
-/vendor/
-node_modules/
-npm-debug.log
-yarn-error.log
+# Dependencias y archivos generados por Node.js
+/node_modules
+/npm-debug.log
+/yarn-error.log
 
-# Laravel 4 specific
-bootstrap/compiled.php
-app/storage/
+# Dependencias de PHP y Laravel
+/vendor
 
-# Laravel 5 & Lumen specific
-public/storage
-public/hot
+# Laravel archivos de configuración y claves
+/storage/*.key
+/.env
+/.env.backup
+/.env.production
 
-# Laravel 5 & Lumen specific with changed public path
-public_html/storage
-public_html/hot
-
-storage/*.key
-.env
-Homestead.yaml
-Homestead.json
-/.vagrant
-.phpunit.result.cache
-
-/public/build
-/storage/pail
-.env.backup
-.env.production
+# Archivos de caché y configuración
+/.phpunit.cache
+/.phpunit.result.cache
 .phpactor.json
+Homestead.json
+Homestead.yaml
 auth.json
+
+# Archivos de compilación y enlaces simbólicos
+/public/build
+/public/hot
+/public/storage
+/storage/pail
+
+# Laravel específico (antiguas versiones y almacenamiento)
+/bootstrap/compiled.php
+/app/storage/
+/public_html/storage
+/public_html/hot
+
+# Configuración de IDEs y herramientas
+/.vscode
+/.idea
+/.fleet
+/.nova
+/.zed
+
+# Archivos de entornos de virtualización
+/.vagrant
+
