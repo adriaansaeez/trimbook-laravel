@@ -48,4 +48,60 @@
         </div>
     </form>
 </div>
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const interval = setInterval(function() {
+        if (window.$) {
+            clearInterval(interval); // jQuery está listo
+
+            const horaInicio = $('input[name="hora_inicio"]');
+            const horaFin = $('input[name="hora_fin"]');
+            let erroresDiv = $('#errores-validacion');
+
+            // Si no existe el div, créalo justo antes del formulario
+            if (!erroresDiv.length) {
+                erroresDiv = $('<div id="errores-validacion" class="bg-red-400 text-white p-4 rounded-md mb-4 hidden"></div>');
+                $('form').before(erroresDiv);
+            }
+
+            function mostrarError(mensaje) {
+                erroresDiv.text(mensaje).removeClass('hidden');
+            }
+
+            function ocultarError() {
+                erroresDiv.addClass('hidden').text('');
+            }
+
+            function validarHoras() {
+                ocultarError();
+                horaInicio.removeClass('border-red-500 border-2');
+                horaFin.removeClass('border-red-500 border-2');
+
+                if (horaInicio.val() && horaFin.val() && horaInicio.val() >= horaFin.val()) {
+                    horaInicio.addClass('border-red-500 border-2');
+                    horaFin.addClass('border-red-500 border-2');
+                    mostrarError('La hora de fin debe ser posterior a la hora de inicio.');
+                    return false;
+                }
+
+                return true;
+            }
+
+            horaInicio.on('change', validarHoras);
+            horaFin.on('change', validarHoras);
+
+            $('form').submit(function(event) {
+                if (!validarHoras()) {
+                    event.preventDefault();
+                }
+            });
+        }
+    }, 50);
+});
+</script>
+@endsection
+
+
 @endsection

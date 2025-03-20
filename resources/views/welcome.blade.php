@@ -49,7 +49,7 @@
             <main class="flex flex-col max-w-[335px] w-full lg:max-w-4xl lg:flex-col items-center md:justify-center text-center mb-6">
                 <div class="md:flex md:flex-col">
                     <p class="md:text-6xl text-3xl font-bold text-white drop-shadow-[2px_2px_0px_#000] ">WELCOME TO </p>
-                    <p class="md:text-9xl text-6xl font-medium text-blue-500">TRIMBOOK</p>
+                    <p class="md:text-9xl text-6xl text-blue-500 font-bold">trimbook.</p>
                 </div>
                 <div class="md:mt-10 md:justify-evenly mt-5 h-full">
                     <a href="" class="border rounded p-2 text-white bg-blue-500">Book now!</a>
