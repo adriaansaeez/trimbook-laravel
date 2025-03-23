@@ -37,6 +37,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/estilistas/{estilista}/edit', [EstilistaController::class, 'edit'])->name('estilistas.edit');
         Route::put('/estilistas/{estilista}', [EstilistaController::class, 'update'])->name('estilistas.update'); // <--- Aquí
         Route::delete('/estilistas/{estilista}', [EstilistaController::class, 'destroy'])->name('estilistas.destroy');
+
+        Route::get('estilistas/{estilista}/horarios', [EstilistaController::class, 'editHorarios'])->name('estilistas.horarios.edit');
+        Route::put('estilistas/{estilista}/horarios', [EstilistaController::class, 'updateHorarios'])->name('estilistas.horarios.update');
+
     
         // CRUD de Servicios
         Route::get('/servicios', [ServicioController::class, 'index'])->name('servicios.index');

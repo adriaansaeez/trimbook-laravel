@@ -17,31 +17,36 @@
     <form action="{{ route('reservas.store') }}" method="POST">
         @csrf
 
-        <div class="mb-4">
-            <label class="block text-sm font-medium">Servicio</label>
-            <select name="servicio_id" id="servicio" class="w-full p-2 border rounded-md">
-                <option value="">Seleccione un servicio</option>
-                @foreach ($servicios as $servicio)
-                    <option value="{{ $servicio->id }}">{{ $servicio->nombre }}</option>
-                @endforeach
-            </select>
+        <div class="mb-4 flex gap-4">
+            <div class="w-1/2">
+                <label class="block text-sm font-medium">Servicio</label>
+                <select name="servicio_id" id="servicio" class="w-full p-2 border rounded-md">
+                    <option value="">Seleccione un servicio</option>
+                    @foreach ($servicios as $servicio)
+                        <option value="{{ $servicio->id }}">{{ $servicio->nombre }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="w-1/2">
+                <label class="block text-sm font-medium">Estilista</label>
+                <select name="estilista_id" id="estilista" class="w-full p-2 border rounded-md" disabled>
+                    <option value="">Seleccione un estilista</option>
+                </select>
+            </div>
         </div>
 
-        <div class="mb-4">
-            <label class="block text-sm font-medium">Estilista</label>
-            <select name="estilista_id" id="estilista" class="w-full p-2 border rounded-md" disabled>
-                <option value="">Seleccione un estilista</option>
-            </select>
-        </div>
 
-        <div class="mb-4">
-            <label class="block text-sm font-medium">Fecha</label>
-            <input type="date" name="fecha" id="fecha" class="w-full p-2 border rounded-md" disabled>
-        </div>
+        <div class="mb-4 flex gap-4">
+            <div class="w-1/2">
+                <label class="block text-sm font-medium">Fecha</label>
+                <input type="date" name="fecha" id="fecha" class="w-full p-2 border rounded-md" disabled>
+            </div>
 
-        <div class="mb-4" id="horarios-container" style="display: none;">
-            <h2 class="text-lg font-bold mb-2">Horas Disponibles</h2>
-            <div id="horas-lista"></div>
+            <div class="w-1/2" id="horarios-container" style="display: none;">
+                <label class="block text-sm font-medium">Horas Disponibles</label>
+                <div id="horas-lista" class="mt-1 space-y-1"></div>
+            </div>
         </div>
 
         <div class="flex justify-between mt-6">

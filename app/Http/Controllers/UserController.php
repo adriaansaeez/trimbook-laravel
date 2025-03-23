@@ -51,9 +51,10 @@ class UserController extends Controller
     public function edit($id)
     {
         $user = User::findOrFail($id);
-        $roles = Role::all(); // Obtener todos los roles como colección de objetos
+        $roles = Role::all(); 
+        $perfil = $user->perfil()->firstOrCreate(['usuario_id' => $user->id]); 
 
-        return view('users.edit', compact('user', 'roles'));
+        return view('users.edit', compact('user', 'roles', 'perfil'));
     }
 
 
@@ -66,6 +67,11 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => "required|email|unique:users,email,$id",
             'role' => 'required|exists:roles,name',
+            'nombre' => 'nullable|string|max:255',
+            'apellidos' => 'nullable|string|max:255',
+            'telefono' => 'nullable|string|max:20',
+            'direccion' => 'nullable|string|max:255',
+            'instagram_url' => 'nullable|url|max:255',
         ]);
 
         $user->update([
@@ -73,10 +79,21 @@ class UserController extends Controller
             'email' => $request->email,
         ]);
 
-        // Actualizar el rol del usuario
         $user->syncRoles([$request->role]);
 
-        return redirect()->route('users.index')->with('success', 'Usuario actualizado correctamente.');
+        // Actualiza el perfil asociado
+        $user->perfil()->updateOrCreate(
+            ['usuario_id' => $user->id],
+            [
+                'nombre' => $request->nombre,
+                'apellidos' => $request->apellidos,
+                'telefono' => $request->telefono,
+                'direccion' => $request->direccion,
+                'instagram_url' => $request->instagram_url,
+            ]
+        );
+
+        return redirect()->route('users.index')->with('success', 'Usuario y perfil actualizados correctamente.');
     }
 
     // Eliminar usuario

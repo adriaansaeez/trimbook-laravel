@@ -21,6 +21,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('estilista_id')->constrained('estilistas')->onDelete('cascade');
             $table->foreignId('horario_id')->constrained('horarios')->onDelete('cascade');
+            $table->date('fecha_inicio')->nullable();
+            $table->date('fecha_fin')->nullable();
+            $table->timestamps();
+
         });
     }
 
