@@ -93,8 +93,9 @@ Route::middleware(['auth', 'role:admin|estilista|cliente'])->group(function () {
     Route::delete('/reservas/{reserva}', [ReservaController::class, 'destroy'])->name('reservas.destroy'); // 🛑 Nueva ruta
 
     // Rutas para carga de datos dinámicos vía AJAX con Axios
-    Route::get('/reservas/estilistas/{servicio_id}', [ReservaController::class, 'getEstilistas'])->name('reservas.getEstilistas');
-    Route::get('/reservas/horarios/{estilista_id}/{fecha}', [ReservaController::class, 'getHorarios'])->name('reservas.getHorarios');
+    Route::get('/reservas/estilistas/{servicio_id}', [ReservaController::class, 'getEstilistas']);
+    Route::get('/reservas/horarios/{estilista_id}/{fecha}/{servicio_id}', [ReservaController::class, 'getHorarios']);
+
 });
 
 

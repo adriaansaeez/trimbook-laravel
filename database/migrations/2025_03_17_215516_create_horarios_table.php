@@ -16,8 +16,8 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Tabla intermedia estilista_horario
-        Schema::create('estilista_horario', function (Blueprint $table) {
+        // Tabla intermedia 
+        Schema::create('horarios_estilista', function (Blueprint $table) {
             $table->id();
             $table->foreignId('estilista_id')->constrained('estilistas')->onDelete('cascade');
             $table->foreignId('horario_id')->constrained('horarios')->onDelete('cascade');
@@ -30,7 +30,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('estilista_horario');
+        Schema::dropIfExists('horarios_estilista');
         Schema::dropIfExists('horarios');
     }
 };

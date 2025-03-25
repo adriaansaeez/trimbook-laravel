@@ -61,49 +61,51 @@
 </div>
 
 <script>
-document.getElementById('servicio').addEventListener('change', function() {
-    let servicioId = this.value;
-    let estilistaSelect = document.getElementById('estilista');
-    let fechaInput = document.getElementById('fecha'); // 🟢 Seleccionamos el campo fecha
+    document.getElementById('servicio').addEventListener('change', function() {
+        let servicioId = this.value;
+        let estilistaSelect = document.getElementById('estilista');
+        let fechaInput = document.getElementById('fecha'); // 🟢 Seleccionamos el campo fecha
 
-    estilistaSelect.innerHTML = '<option value="">Cargando...</option>';
-    estilistaSelect.disabled = true;
-    fechaInput.disabled = true; // 🟠 Deshabilitamos la fecha temporalmente
+        estilistaSelect.innerHTML = '<option value="">Cargando...</option>';
+        estilistaSelect.disabled = true;
+        fechaInput.disabled = true; // 🟠 Deshabilitamos la fecha temporalmente
 
-    axios.get(`/reservas/estilistas/${servicioId}`)
-        .then(response => {
-            estilistaSelect.innerHTML = '<option value="">Seleccione un estilista</option>';
-            response.data.forEach(estilista => {
-                estilistaSelect.innerHTML += `<option value="${estilista.id}">${estilista.nombre}</option>`;
+        axios.get(`/reservas/estilistas/${servicioId}`)
+            .then(response => {
+                estilistaSelect.innerHTML = '<option value="">Seleccione un estilista</option>';
+                response.data.forEach(estilista => {
+                    estilistaSelect.innerHTML += `<option value="${estilista.id}">${estilista.nombre}</option>`;
+                });
+                estilistaSelect.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error al obtener estilistas:', error);
             });
-            estilistaSelect.disabled = false;
-        })
-        .catch(error => {
-            console.error('Error al obtener estilistas:', error);
-        });
-});
+    });
 
-// 🟢 Habilitar la fecha cuando se selecciona un estilista
-document.getElementById('estilista').addEventListener('change', function() {
-    let fechaInput = document.getElementById('fecha');
-    fechaInput.disabled = false; // ✅ Habilitamos el campo de fecha
-});
+    // 🟢 Habilitar la fecha cuando se selecciona un estilista
+    document.getElementById('estilista').addEventListener('change', function() {
+        let fechaInput = document.getElementById('fecha');
+        fechaInput.disabled = false; // ✅ Habilitamos el campo de fecha
+    });
 
 
-document.getElementById('fecha').addEventListener('change', function() {
-    let estilistaId = document.getElementById('estilista').value;
-    let fecha = this.value;
+    document.getElementById('fecha').addEventListener('change', function () {
+        let estilistaId = document.getElementById('estilista').value;
+        let servicioId = document.getElementById('servicio').value;
+        let fecha = this.value;
 
-    axios.get(`/reservas/horarios/${estilistaId}/${fecha}`)
-        .then(response => {
-            let horariosContainer = document.getElementById('horarios-container');
-            let horasLista = document.getElementById('horas-lista');
-            horasLista.innerHTML = '';
-            response.data.forEach(hora => {
-                horasLista.innerHTML += `<label><input type="radio" name="hora" value="${hora}"> ${hora}</label><br>`;
+        axios.get(`/reservas/horarios/${estilistaId}/${fecha}/${servicioId}`)
+            .then(response => {
+                let horariosContainer = document.getElementById('horarios-container');
+                let horasLista = document.getElementById('horas-lista');
+                horasLista.innerHTML = '';
+                response.data.forEach(hora => {
+                    horasLista.innerHTML += `<label><input type="radio" name="hora" value="${hora}"> ${hora}</label><br>`;
+                });
+                horariosContainer.style.display = 'block';
             });
-            horariosContainer.style.display = 'block';
-        });
-});
+    });
+
 </script>
 @endsection

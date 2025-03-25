@@ -15,10 +15,14 @@ class Horario extends Model
     protected $casts = [
         'horario' => 'array'
     ];
+    
     public function estilistas()
     {
-        return $this->belongsToMany(Estilista::class, 'horarios_estilista');
+        return $this->belongsToMany(Estilista::class, 'horarios_estilista')
+                    ->withPivot('fecha_inicio', 'fecha_fin')
+                    ->withTimestamps();
     }
+
 
     // Definición del trigger a través del evento "saving"
     protected static function booted()

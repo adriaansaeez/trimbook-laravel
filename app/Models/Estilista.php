@@ -25,10 +25,11 @@ class Estilista extends Model
 
     public function horarios()
     {
-        return $this->belongsToMany(Horario::class)
+        return $this->belongsToMany(Horario::class, 'horarios_estilista')
                     ->withPivot('fecha_inicio', 'fecha_fin')
                     ->withTimestamps();
     }
+
 
 
 
