@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use App\Models\Horario;
 use Illuminate\Support\Facades\Log;
+use App\Models\Servicio;
 
 class EstilistaController extends Controller
 {
@@ -166,6 +167,27 @@ class EstilistaController extends Controller
 
         return redirect()->route('asignar_horario.index', ['estilista_id' => $estilista->id])
             ->with('success', 'Horario asignado correctamente.');
+    }
+    public function formAsignarServicios()
+    {
+        $estilistas = Estilista::all();
+        $servicios = Servicio::all();
+
+        return view('estilistas.asignar-servicios', compact('estilistas', 'servicios'));
+    }
+
+    public function asignarServicios(Request $request)
+    {
+        $request->validate([
+            'estilista_id' => 'required|exists:estilistas,id',
+            'servicios' => 'array',
+            'servicios.*' => 'exists:servicios,id',
+        ]);
+
+        $estilista = Estilista::findOrFail($request->estilista_id);
+        $estilista->servicios()->sync($request->servicios ?? []); // sincroniza los seleccionados
+
+        return redirect()->back()->with('success', 'Servicios asignados correctamente.');
     }
 
 

@@ -41,6 +41,12 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('estilistas/{estilista}/horarios', [EstilistaController::class, 'editHorarios'])->name('estilistas.horarios.edit');
         Route::put('estilistas/{estilista}/horarios', [EstilistaController::class, 'asignarHorario'])->name('estilistas.horarios.update');
 
+        // Mostrar formulario de asignación
+        Route::get('/estilistas/asignar-servicios', [EstilistaController::class, 'formAsignarServicios'])->name('estilistas.asignar.form');
+        // Procesar el formulario
+        Route::post('/estilistas/asignar-servicios', [EstilistaController::class, 'asignarServicios'])->name('estilistas.asignar.servicios');
+
+
     
         // CRUD de Servicios
         Route::get('/servicios', [ServicioController::class, 'index'])->name('servicios.index');

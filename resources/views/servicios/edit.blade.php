@@ -40,18 +40,6 @@
             </div>
         </div>
 
-        <div class="mb-4">
-            <label class="block text-sm font-medium">Estilistas</label>
-            @foreach ($estilistas as $estilista)
-                <div class="flex items-center">
-                    <input type="checkbox" name="estilistas[]" value="{{ $estilista->id }}"
-                        @if($servicio->estilistas->contains($estilista->id)) checked @endif
-                        class="mr-2">
-                    <label>{{ $estilista->nombre }}</label>
-                </div>
-            @endforeach
-        </div>
-
         <div class="flex justify-between">
             <a href="{{ route('servicios.index') }}" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
                 Cancelar

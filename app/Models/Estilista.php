@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Servicio;
 
 class Estilista extends Model
 {
@@ -19,8 +20,9 @@ class Estilista extends Model
     // Relación muchos a muchos con Servicio
     public function servicios()
     {
-        return $this->belongsToMany(Servicio::class, 'estilista_servicio');
+        return $this->belongsToMany(Servicio::class);
     }
+
     public function horarios()
     {
         return $this->belongsToMany(Horario::class)
