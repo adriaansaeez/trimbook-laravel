@@ -9,12 +9,16 @@ class Horario extends Model
 {
     protected $table = 'horarios';
 
-    protected $fillable = ['horario', 'registro_horas_semanales'];
+    protected $fillable = ['nombre', 'horario', 'registro_horas_semanales'];
 
     // Se indica que el campo horario se debe castear a array
     protected $casts = [
         'horario' => 'array'
     ];
+    public function estilistas()
+    {
+        return $this->belongsToMany(Estilista::class, 'horarios_estilista');
+    }
 
     // Definición del trigger a través del evento "saving"
     protected static function booted()
@@ -62,4 +66,6 @@ class Horario extends Model
 
         return $totalHoras;
     }
+    
+
 }

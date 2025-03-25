@@ -33,10 +33,5 @@
         </div>
     </form>
 
-    <div class="mt-8">
-        <a href="{{ route('estilistas.horarios.edit', $estilista) }}" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-            Asignar Horarios Disponibles
-        </a>
-    </div>
 </div>
 @endsection

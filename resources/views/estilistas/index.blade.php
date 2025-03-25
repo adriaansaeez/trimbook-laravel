@@ -39,7 +39,6 @@
                         <td class="px-6 py-4 whitespace-nowrap">{{ $estilista->user->name ?? 'Sin usuario' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <a href="{{ route('estilistas.edit', $estilista) }}" class="text-blue-500 hover:underline">Editar</a>
-                            <a href="{{ route('estilistas.horarios.edit', $estilista) }}" class="ml-4 text-indigo-500 hover:underline">Horarios</a>
                             <form action="{{ route('estilistas.destroy', $estilista->id) }}" method="POST" class="inline-block ml-4">
                                 @csrf
                                 @method('DELETE')

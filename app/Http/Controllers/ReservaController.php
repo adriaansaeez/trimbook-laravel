@@ -67,49 +67,72 @@ class ReservaController extends Controller
     // Obtener horarios disponibles para un estilista en una fecha
     public function getHorarios($estilista_id, $fecha)
     {
-        $diaSemana = strtoupper(Carbon::parse($fecha)->locale('es')->dayName); // Ej: 'MIERCOLES'
-
-        // Obtener horarios del estilista en ese día
+        // Obtener el día de la semana en mayúsculas (ejemplo: LUNES)
+        $diaSemana = strtoupper(Carbon::parse($fecha)->locale('es')->dayName);
+        
+        // Obtener todos los horarios asignados al estilista (relación definida a través de horarios_estilista)
         $horarios = Horario::whereHas('estilistas', function ($query) use ($estilista_id) {
-            $query->where('estilistas.id', $estilista_id); // Especificamos la tabla
-        })
-        ->where('dia', $diaSemana)
-        ->get();
-
+            $query->where('estilistas.id', $estilista_id);
+        })->get();
+        
+        // Se obtiene el servicio asociado al estilista para determinar la duración del turno.
+        // (En este ejemplo se obtiene el primer servicio encontrado para el estilista.)
         $servicio = Servicio::whereHas('estilistas', function ($query) use ($estilista_id) {
-            $query->where('estilistas.id', $estilista_id); // Especificamos la tabla
+            $query->where('estilistas.id', $estilista_id);
         })->first();
         
-
         if (!$servicio) {
             return response()->json([]);
         }
-
+        
         $duracion = $servicio->duracion; // Duración en minutos
         $horasDisponibles = [];
-
+        
+        // Recorrer cada registro de horarios asociados al estilista
         foreach ($horarios as $horario) {
-            $horaInicio = Carbon::parse($horario->hora_inicio);
-            $horaFin = Carbon::parse($horario->hora_fin);
-
-            while ($horaInicio->lessThan($horaFin)) {
-                $horaStr = $horaInicio->format('H:i');
-
-                // Verificar si la hora ya está reservada
-                $existeReserva = Reserva::where('estilista_id', $estilista_id)
-                    ->where('fecha', $fecha)
-                    ->where('hora', $horaStr)
-                    ->exists();
-
-                if (!$existeReserva) {
-                    $horasDisponibles[] = $horaStr;
+            // Se asume que el campo "horario" es un array con bloques de día, cada uno con un atributo "dia" e "intervalos"
+            if (!is_array($horario->horario)) {
+                continue;
+            }
+            
+            // Buscar el bloque que corresponda al día de la semana solicitado
+            $bloque = null;
+            foreach ($horario->horario as $bloqueDia) {
+                if (strtoupper($bloqueDia['dia']) == $diaSemana) {
+                    $bloque = $bloqueDia;
+                    break;
                 }
-
-                $horaInicio->addMinutes($duracion);
+            }
+            
+            // Si se encontró un bloque para el día y este tiene intervalos definidos
+            if ($bloque && isset($bloque['intervalos']) && is_array($bloque['intervalos'])) {
+                foreach ($bloque['intervalos'] as $intervalo) {
+                    // Convertir el inicio y fin a objetos Carbon
+                    $horaInicio = Carbon::createFromFormat('H:i', $intervalo['start']);
+                    $horaFin = Carbon::createFromFormat('H:i', $intervalo['end']);
+                    
+                    // Recorrer el intervalo en saltos iguales a la duración del servicio
+                    while ($horaInicio->lt($horaFin)) {
+                        $horaStr = $horaInicio->format('H:i');
+                        
+                        // Verificar si ya existe una reserva para ese estilista, fecha y hora
+                        $existeReserva = Reserva::where('estilista_id', $estilista_id)
+                            ->where('fecha', $fecha)
+                            ->where('hora', $horaStr)
+                            ->exists();
+                        
+                        if (!$existeReserva) {
+                            $horasDisponibles[] = $horaStr;
+                        }
+                        
+                        $horaInicio->addMinutes($duracion);
+                    }
+                }
             }
         }
-
+        
         return response()->json($horasDisponibles);
     }
+
 }
 

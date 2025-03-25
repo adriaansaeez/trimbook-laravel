@@ -104,40 +104,70 @@ class EstilistaController extends Controller
     {
         try {
             $estilista = Estilista::with('horarios')->findOrFail($id);
-            $horarios = Horario::all();
+            $allHorarios = Horario::all();
 
-            return view('estilistas.edit-horarios', compact('estilista', 'horarios'));
+            return view('estilistas.edit-horarios', compact('estilista', 'allHorarios'));
         } catch (\Exception $e) {
             Log::error('Error al cargar edición de horarios: ' . $e->getMessage());
             return redirect()->back()->withErrors('No se pudo cargar la edición de horarios.');
         }
     }
 
-    public function updateHorarios(Request $request, $id)
+    public function vistaAsignarHorarioIndex(Request $request)
     {
-        try {
-            $estilista = Estilista::findOrFail($id);
+        $estilistas = Estilista::all();
+        $estilistaSeleccionado = null;
+        $horarios = [];
 
-            $syncData = [];
-
-            foreach ($request->input('horarios', []) as $dia => $horarioIds) {
-                foreach ($horarioIds as $horarioId) {
-                    $syncData[$horarioId] = [
-                        'fecha_inicio' => $request->input("fechas.$dia.inicio"),
-                        'fecha_fin' => $request->input("fechas.$dia.fin"),
-                    ];
-                }
-            }
-
-            $estilista->horarios()->sync($syncData);
-
-            return redirect()->route('estilistas.edit', $estilista)
-                ->with('success', 'Horarios actualizados correctamente.');
-
-        } catch (\Exception $e) {
-            \Log::error('Error al actualizar horarios del estilista: ' . $e->getMessage());
-            return redirect()->back()->withErrors('Error al actualizar los horarios.');
+        if ($request->has('estilista_id')) {
+            $estilistaSeleccionado = Estilista::find($request->estilista_id);
+            $horarios = $estilistaSeleccionado->horarios; // Asumiendo relación horarios()
         }
+
+        return view('asignar_horario.index', compact('estilistas', 'estilistaSeleccionado', 'horarios'));
     }
+
+    // Muestra el formulario para asignar horarios
+    public function vistaAsignarHorarioForm($id)
+    {
+        $estilista = Estilista::findOrFail($id);
+        $horariosDisponibles = Horario::all(); // o filtra según lógica de tu app
+
+        return view('asignar_horario.create', compact('estilista', 'horariosDisponibles'));
+    }
+
+    // Guarda la asignación
+    public function guardarAsignacionHorario(Request $request, $id)
+    {
+        $request->validate([
+            'horario_id' => 'required|exists:horarios,id',
+            'fecha_inicio' => 'required|date|before_or_equal:fecha_fin',
+            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+        ]);
+
+        $estilista = Estilista::findOrFail($id);
+
+        // Evita duplicados del mismo horario y rango
+        $yaExiste = $estilista->horarios()
+            ->wherePivot('horario_id', $request->horario_id)
+            ->wherePivot('fecha_inicio', $request->fecha_inicio)
+            ->wherePivot('fecha_fin', $request->fecha_fin)
+            ->exists();
+
+        if ($yaExiste) {
+            return back()->with('error', 'Este horario ya ha sido asignado con ese rango de fechas.');
+        }
+
+        // Asignar horario con fechas
+        $estilista->horarios()->attach($request->horario_id, [
+            'fecha_inicio' => $request->fecha_inicio,
+            'fecha_fin' => $request->fecha_fin,
+        ]);
+
+        return redirect()->route('asignar_horario.index', ['estilista_id' => $estilista->id])
+            ->with('success', 'Horario asignado correctamente.');
+    }
+
+
 
 }

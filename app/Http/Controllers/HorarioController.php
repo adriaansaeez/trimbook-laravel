@@ -20,8 +20,9 @@ class HorarioController extends Controller
 
     public function store(Request $request)
     {
-        // Validamos que se envíe un array "horario" con la estructura requerida.
+        // Validamos que se envíe el campo "nombre" y el array "horario" con la estructura requerida.
         $request->validate([
+            'nombre' => 'required|string|max:255',
             'horario' => 'required|array',
             'horario.*.dia' => 'required|in:LUNES,MARTES,MIERCOLES,JUEVES,VIERNES,SABADO,DOMINGO',
             'horario.*.intervalos' => 'required|array',
@@ -57,8 +58,9 @@ class HorarioController extends Controller
 
     public function update(Request $request, Horario $horario)
     {
-        // Validamos la estructura del array "horario"
+        // Validamos que se envíe el campo "nombre" y la estructura del array "horario"
         $request->validate([
+            'nombre' => 'required|string|max:255',
             'horario' => 'required|array',
             'horario.*.dia' => 'required|in:LUNES,MARTES,MIERCOLES,JUEVES,VIERNES,SABADO,DOMINGO',
             'horario.*.intervalos' => 'required|array',
@@ -86,11 +88,11 @@ class HorarioController extends Controller
 
         return redirect()->route('horarios.index')->with('success', 'Horario actualizado correctamente.');
     }
+    
     public function show(Horario $horario)
     {
         return view('horarios.show', compact('horario'));
     }
-
 
     public function destroy(Horario $horario)
     {

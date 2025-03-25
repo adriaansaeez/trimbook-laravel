@@ -19,6 +19,7 @@
                 <thead>
                     <tr>
                         <th class="py-2 px-4 border-b">ID</th>
+                        <th class="py-2 px-4 border-b">Nombre</th>
                         <th class="py-2 px-4 border-b">Horas Semanales</th>
                         <th class="py-2 px-4 border-b">Acciones</th>
                     </tr>
@@ -27,6 +28,7 @@
                     @foreach($horarios as $horario)
                         <tr>
                             <td class="py-2 px-4 border-b">{{ $horario->id }}</td>
+                            <td class="py-2 px-4 border-b">{{ $horario->nombre }}</td>
                             <td class="py-2 px-4 border-b">{{ $horario->registro_horas_semanales }}</td>
                             <td class="py-2 px-4 border-b">
                                 <a href="{{ route('horarios.show', $horario->id) }}" class="bg-indigo-500 hover:bg-indigo-600 text-white py-1 px-3 rounded">Mostrar Horario</a>

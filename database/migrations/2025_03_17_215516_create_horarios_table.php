@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('horarios', function (Blueprint $table) {
             $table->id();
+            $table->string('nombre'); // Columna nombre añadida
             $table->json('horario'); // Almacena el JSON con los días e intervalos
             $table->float('registro_horas_semanales')->default(0);
             $table->timestamps();

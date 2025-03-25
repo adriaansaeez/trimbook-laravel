@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container mx-auto p-6">
-    <h1 class="text-2xl font-semibold mb-4">Detalle del Horario #{{ $horario->id }}</h1>
+    <h1 class="text-2xl font-semibold mb-4">Detalle del Horario #{{ $horario->nombre }}</h1>
     <div class="bg-white shadow rounded p-6">
         <h2 class="text-xl font-medium mb-4">Horas Semanales: {{ $horario->registro_horas_semanales }}</h2>
         @if(is_array($horario->horario))

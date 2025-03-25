@@ -6,6 +6,12 @@
   <form method="POST" action="{{ route('horarios.store') }}" class="bg-white shadow rounded p-6">
     @csrf
 
+    <!-- Campo para el nombre del Horario -->
+    <div class="mb-6">
+      <label for="nombre" class="block text-gray-700 font-medium mb-2">Nombre</label>
+      <input type="text" name="nombre" id="nombre" class="w-full border-gray-300 rounded p-2" required>
+    </div>
+
     <!-- Contenedor de bloques de días -->
     <div id="dias-container"></div>
 
@@ -32,7 +38,7 @@
       </button>
     </div>
     <select name="horario[__DAY_INDEX__][dia]" class="dia-select w-full border-gray-300 rounded mb-4">
-      <!-- Las opciones se actualizarán dinámicamente -->
+      <!-- Las opciones se cargarán dinámicamente -->
     </select>
     <!-- Contenedor para los intervalos de este día -->
     <div class="intervalos-container mb-4">
@@ -71,26 +77,18 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function(){
-  // Lista completa de días
   const fullDays = ["LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO"];
 
-  // Función para actualizar las opciones de cada select según los días ya seleccionados
   function updateDaySelects() {
-    // Recoger los días seleccionados de cada bloque
     let selectedDays = [];
     $('.dia-select').each(function() {
       const val = $(this).val();
-      if(val) {
-        selectedDays.push(val);
-      }
+      if(val) { selectedDays.push(val); }
     });
-
-    // Actualizar cada select: limpiar y agregar solo opciones disponibles
     $('.dia-select').each(function() {
       const currentVal = $(this).val();
       $(this).empty();
       $.each(fullDays, function(index, day) {
-        // Permitir la opción si es la actual o si no está seleccionada en otro bloque
         if(day === currentVal || selectedDays.indexOf(day) === -1) {
           const option = $('<option>', { value: day, text: day });
           if(day === currentVal) option.prop('selected', true);
@@ -100,7 +98,6 @@ $(document).ready(function(){
     });
   }
 
-  // Función para actualizar los índices de los bloques e intervalos tras eliminación
   function actualizarIndices() {
     $('#dias-container .dia-group').each(function(i) {
       $(this).attr('data-index', i);
@@ -118,7 +115,6 @@ $(document).ready(function(){
     updateDaySelects();
   }
 
-  // Agregar bloque de día
   $('#add-day-block').click(function(){
     var dayIndex = $('#dias-container .dia-group').length;
     var template = $('#day-block-template').html();
@@ -127,13 +123,11 @@ $(document).ready(function(){
     updateDaySelects();
   });
 
-  // Eliminar bloque de día
   $(document).on('click', '.btn-remove-day', function(){
     $(this).closest('.dia-group').remove();
     actualizarIndices();
   });
 
-  // Agregar un intervalo a un bloque específico
   $(document).on('click', '.btn-add-intervalo', function(){
     var diaGroup = $(this).closest('.dia-group');
     var dayIndex = diaGroup.data('index');
@@ -145,13 +139,11 @@ $(document).ready(function(){
     diaGroup.find('.intervalos-container').append(template);
   });
 
-  // Eliminar un intervalo
   $(document).on('click', '.btn-remove-intervalo', function(){
     $(this).closest('.intervalo').remove();
     actualizarIndices();
   });
 
-  // Actualizar opciones al cambiar el select
   $(document).on('change', '.dia-select', function(){
     updateDaySelects();
   });

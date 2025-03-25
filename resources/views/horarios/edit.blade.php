@@ -7,6 +7,12 @@
     @csrf
     @method('PUT')
 
+    <!-- Campo para el nombre del Horario -->
+    <div class="mb-6">
+      <label for="nombre" class="block text-gray-700 font-medium mb-2">Nombre</label>
+      <input type="text" name="nombre" id="nombre" value="{{ $horario->nombre }}" class="w-full border-gray-300 rounded p-2" required>
+    </div>
+
     <!-- Contenedor de bloques de días -->
     <div id="dias-container">
       @foreach($horario->horario as $diaIndex => $dia)

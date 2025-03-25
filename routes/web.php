@@ -39,7 +39,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::delete('/estilistas/{estilista}', [EstilistaController::class, 'destroy'])->name('estilistas.destroy');
 
         Route::get('estilistas/{estilista}/horarios', [EstilistaController::class, 'editHorarios'])->name('estilistas.horarios.edit');
-        Route::put('estilistas/{estilista}/horarios', [EstilistaController::class, 'updateHorarios'])->name('estilistas.horarios.update');
+        Route::put('estilistas/{estilista}/horarios', [EstilistaController::class, 'asignarHorario'])->name('estilistas.horarios.update');
 
     
         // CRUD de Servicios
@@ -58,6 +58,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/horarios/{horario}/edit', [HorarioController::class, 'edit'])->name('horarios.edit');
         Route::put('/horarios/{horario}', [HorarioController::class, 'update'])->name('horarios.update');
         Route::delete('/horarios/{horario}', [HorarioController::class, 'destroy'])->name('horarios.destroy');
+        // Asignaciones de horarios a estilistas
+        Route::get('/asignar-horario', [EstilistaController::class, 'vistaAsignarHorarioIndex'])->name('asignar_horario.index');
+        Route::get('/asignar-horario/create/{estilista}', [EstilistaController::class, 'vistaAsignarHorarioForm'])->name('asignar_horario.create');
+        Route::post('/asignar-horario/store/{estilista}', [EstilistaController::class, 'guardarAsignacionHorario'])->name('asignar_horario.store');
+
 
      
     });
