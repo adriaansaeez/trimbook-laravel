@@ -23,7 +23,7 @@
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <!-- Book button -->
                 <div class="shrink-0 flex items-center md:ms-5">
-                    <a href="" class="border rounded text-white bg-blue-500 p-1 font-semibold">
+                    <a href="{{ route('reservas.create') }}" class="border rounded text-white bg-blue-500 p-1 font-semibold">
                         Book now 
                     </a>
                 </div>
