@@ -1,108 +1,193 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-4xl mx-auto py-6">
-    <h1 class="text-3xl font-bold mb-6">Editar Horario</h1>
+<div class="container mx-auto p-6">
+  <h1 class="text-2xl font-semibold mb-4">Editar Horario</h1>
+  <form method="POST" action="{{ route('horarios.update', $horario->id) }}" class="bg-white shadow rounded p-6">
+    @csrf
+    @method('PUT')
 
-    @if ($errors->any())
-        <div class="bg-red-400 text-white p-4 rounded-md mb-4">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>- {{ $error }}</li>
-                @endforeach
-            </ul>
+    <!-- Contenedor de bloques de días -->
+    <div id="dias-container">
+      @foreach($horario->horario as $diaIndex => $dia)
+      <div class="dia-group mb-6 border p-4 rounded" data-index="{{ $diaIndex }}">
+        <div class="flex items-center justify-between mb-4">
+          <label class="block text-gray-700 font-medium">Día de la semana</label>
+          <button type="button" class="btn-remove-day bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded">
+            Eliminar Bloque
+          </button>
         </div>
-    @endif
-
-    <form action="{{ route('horarios.update', $horario) }}" method="POST">
-        @csrf
-        @method('PUT')
-
-        <div class="mb-4">
-            <label class="block text-sm font-medium">Día de la Semana</label>
-            <select name="dia" class="w-full p-2 border rounded-md" required>
-                @foreach (['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'] as $dia)
-                    <option value="{{ $dia }}" {{ $horario->dia == $dia ? 'selected' : '' }}>
-                        {{ ucfirst(strtolower($dia)) }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="flex gap-4">
-            <div class="w-1/2">
-                <label class="block text-sm font-medium">Hora de Inicio: </label>
-                <input type="time" name="hora_inicio" value="{{ date('H:i', strtotime($horario->hora_inicio)) }}" class="w-full p-2 border rounded-md" required>
+        <select name="horario[{{ $diaIndex }}][dia]" class="dia-select w-full border-gray-300 rounded mb-4">
+          <!-- Se cargarán las opciones en el script -->
+          <option value="{{ $dia['dia'] }}" selected>{{ $dia['dia'] }}</option>
+        </select>
+        <!-- Contenedor para los intervalos -->
+        <div class="intervalos-container mb-4">
+          <h4 class="text-lg font-medium mb-2">Intervalos</h4>
+          @if(isset($dia['intervalos']) && count($dia['intervalos']))
+            @foreach($dia['intervalos'] as $intervaloIndex => $intervalo)
+              <div class="intervalo mb-4">
+                <div class="flex flex-wrap -mx-2">
+                  <div class="w-full md:w-5/12 px-2 mb-4 md:mb-0">
+                    <label class="block text-gray-700 font-medium mb-2">Inicio</label>
+                    <input type="time" name="horario[{{ $diaIndex }}][intervalos][{{ $intervaloIndex }}][start]" class="w-full border-gray-300 rounded" value="{{ $intervalo['start'] }}" required>
+                  </div>
+                  <div class="w-full md:w-5/12 px-2 mb-4 md:mb-0">
+                    <label class="block text-gray-700 font-medium mb-2">Fin</label>
+                    <input type="time" name="horario[{{ $diaIndex }}][intervalos][{{ $intervaloIndex }}][end]" class="w-full border-gray-300 rounded" value="{{ $intervalo['end'] }}" required>
+                  </div>
+                  <div class="w-full md:w-2/12 px-2 flex items-end">
+                    <button type="button" class="btn-remove-intervalo bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded">
+                      Eliminar
+                    </button>
+                  </div>
                 </div>
-            <div class="w-1/2">
-                <label class="block text-sm font-medium">Hora de Fin: </label>
-                <input type="time" name="hora_fin" value="{{ date('H:i', strtotime($horario->hora_fin)) }}" class="w-full p-2 border rounded-md" required>
-                </div>
+              </div>
+            @endforeach
+          @endif
         </div>
+        <button type="button" class="btn-add-intervalo bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded mb-4">
+          Añadir Intervalo
+        </button>
+        <hr class="border-gray-200">
+      </div>
+      @endforeach
+    </div>
 
-        <div class="flex justify-between mt-6">
-            <a href="{{ route('horarios.index') }}" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
-                Cancelar
-            </a>
-            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                Guardar Cambios
-            </button>
-        </div>
-    </form>
+    <!-- Botón para agregar un nuevo bloque de día -->
+    <button type="button" id="add-day-block" class="mb-4 bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded">
+      Añadir Bloque de Día
+    </button>
+
+    <div>
+      <button type="submit" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">
+        Actualizar Horario
+      </button>
+    </div>
+  </form>
 </div>
 
-@section('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const interval = setInterval(function() {
-        if (window.$) {
-            clearInterval(interval); // jQuery está listo
+<!-- Plantilla oculta para un bloque de día -->
+<div id="day-block-template" class="hidden">
+  <div class="dia-group mb-6 border p-4 rounded" data-index="__DAY_INDEX__">
+    <div class="flex items-center justify-between mb-4">
+      <label class="block text-gray-700 font-medium">Día de la semana</label>
+      <button type="button" class="btn-remove-day bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded">
+        Eliminar Bloque
+      </button>
+    </div>
+    <select name="horario[__DAY_INDEX__][dia]" class="dia-select w-full border-gray-300 rounded mb-4">
+      <!-- Opciones se cargarán dinámicamente -->
+    </select>
+    <div class="intervalos-container mb-4">
+      <h4 class="text-lg font-medium mb-2">Intervalos</h4>
+    </div>
+    <button type="button" class="btn-add-intervalo bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded mb-4">
+      Añadir Intervalo
+    </button>
+    <hr class="border-gray-200">
+  </div>
+</div>
 
-            const horaInicio = $('input[name="hora_inicio"]');
-            const horaFin = $('input[name="hora_fin"]');
-            let erroresDiv = $('#errores-validacion');
-
-            // Si no existe el div, créalo justo antes del formulario
-            if (!erroresDiv.length) {
-                erroresDiv = $('<div id="errores-validacion" class="bg-red-400 text-white p-4 rounded-md mb-4 hidden"></div>');
-                $('form').before(erroresDiv);
-            }
-
-            function mostrarError(mensaje) {
-                erroresDiv.text(mensaje).removeClass('hidden');
-            }
-
-            function ocultarError() {
-                erroresDiv.addClass('hidden').text('');
-            }
-
-            function validarHoras() {
-                ocultarError();
-                horaInicio.removeClass('border-red-500 border-2');
-                horaFin.removeClass('border-red-500 border-2');
-
-                if (horaInicio.val() && horaFin.val() && horaInicio.val() >= horaFin.val()) {
-                    horaInicio.addClass('border-red-500 border-2');
-                    horaFin.addClass('border-red-500 border-2');
-                    mostrarError('La hora de fin debe ser posterior a la hora de inicio.');
-                    return false;
-                }
-
-                return true;
-            }
-
-            horaInicio.on('change', validarHoras);
-            horaFin.on('change', validarHoras);
-
-            $('form').submit(function(event) {
-                if (!validarHoras()) {
-                    event.preventDefault();
-                }
-            });
-        }
-    }, 50);
-});
-</script>
+<!-- Plantilla oculta para un intervalo -->
+<div id="intervalo-template" class="hidden">
+  <div class="intervalo mb-4">
+    <div class="flex flex-wrap -mx-2">
+      <div class="w-full md:w-5/12 px-2 mb-4 md:mb-0">
+        <label class="block text-gray-700 font-medium mb-2">Inicio</label>
+        <input type="time" name="__START__" class="w-full border-gray-300 rounded" required>
+      </div>
+      <div class="w-full md:w-5/12 px-2 mb-4 md:mb-0">
+        <label class="block text-gray-700 font-medium mb-2">Fin</label>
+        <input type="time" name="__END__" class="w-full border-gray-300 rounded" required>
+      </div>
+      <div class="w-full md:w-2/12 px-2 flex items-end">
+        <button type="button" class="btn-remove-intervalo bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded">
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 @endsection
 
+@section('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function(){
+  const fullDays = ["LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO"];
+
+  function updateDaySelects() {
+    let selectedDays = [];
+    $('.dia-select').each(function() {
+      const val = $(this).val();
+      if(val) { selectedDays.push(val); }
+    });
+    $('.dia-select').each(function() {
+      const currentVal = $(this).val();
+      $(this).empty();
+      $.each(fullDays, function(index, day) {
+        if(day === currentVal || selectedDays.indexOf(day) === -1) {
+          const option = $('<option>', { value: day, text: day });
+          if(day === currentVal) option.prop('selected', true);
+          $(this).append(option);
+        }
+      }.bind(this));
+    });
+  }
+
+  function actualizarIndices() {
+    $('#dias-container .dia-group').each(function(i) {
+      $(this).attr('data-index', i);
+      $(this).find('.dia-select').attr('name', 'horario[' + i + '][dia]');
+      $(this).find('.intervalos-container .intervalo').each(function(j) {
+        $(this).find('input[type="time"]').each(function(k) {
+          if(k === 0) {
+            $(this).attr('name', 'horario[' + i + '][intervalos][' + j + '][start]');
+          } else {
+            $(this).attr('name', 'horario[' + i + '][intervalos][' + j + '][end]');
+          }
+        });
+      });
+    });
+    updateDaySelects();
+  }
+
+  $('#add-day-block').click(function(){
+    var dayIndex = $('#dias-container .dia-group').length;
+    var template = $('#day-block-template').html();
+    template = template.replace(/__DAY_INDEX__/g, dayIndex);
+    $('#dias-container').append(template);
+    updateDaySelects();
+  });
+
+  $(document).on('click', '.btn-remove-day', function(){
+    $(this).closest('.dia-group').remove();
+    actualizarIndices();
+  });
+
+  $(document).on('click', '.btn-add-intervalo', function(){
+    var diaGroup = $(this).closest('.dia-group');
+    var dayIndex = diaGroup.data('index');
+    var intervalosCount = diaGroup.find('.intervalo').length;
+    var startName = "horario[" + dayIndex + "][intervalos][" + intervalosCount + "][start]";
+    var endName = "horario[" + dayIndex + "][intervalos][" + intervalosCount + "][end]";
+    var template = $('#intervalo-template').html();
+    template = template.replace('__START__', startName).replace('__END__', endName);
+    diaGroup.find('.intervalos-container').append(template);
+  });
+
+  $(document).on('click', '.btn-remove-intervalo', function(){
+    $(this).closest('.intervalo').remove();
+    actualizarIndices();
+  });
+
+  $(document).on('change', '.dia-select', function(){
+    updateDaySelects();
+  });
+
+  // Inicializar selects en la edición
+  updateDaySelects();
+});
+</script>
 @endsection

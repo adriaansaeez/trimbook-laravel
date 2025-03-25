@@ -10,9 +10,8 @@ return new class extends Migration
     {
         Schema::create('horarios', function (Blueprint $table) {
             $table->id();
-            $table->enum('dia', ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO']);
-            $table->time('hora_inicio');
-            $table->time('hora_fin');
+            $table->json('horario'); // Almacena el JSON con los días e intervalos
+            $table->float('registro_horas_semanales')->default(0);
             $table->timestamps();
         });
 
