@@ -1,85 +1,54 @@
 <?php
 
+namespace Tests\Feature\Api;
+
+use Tests\TestCase;
 use App\Models\User;
+use App\Models\Perfil;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-test('profile page is displayed', function () {
-    $user = User::factory()->create();
+class ProfileApiTest extends TestCase
+{
+    use RefreshDatabase;
 
-    $response = $this
-        ->actingAs($user)
-        ->get('/profile');
+    private function authenticate(): User
+    {
+        $user = User::factory()->create(); // Ya crea perfil vía UserFactory
+        $token = $user->createToken('test-token')->plainTextToken;
+        $this->withHeader('Authorization', "Bearer {$token}");
+        return $user;
+    }
 
-    $response->assertOk();
-});
+    public function test_show_profile()
+    {
+        $user = $this->authenticate();
+        $perfil = $user->perfil; // Usa el perfil ya creado
 
-test('profile information can be updated', function () {
-    $user = User::factory()->create();
+        $response = $this->getJson("/api/v1/perfiles/{$perfil->id}");
+        $response->assertOk()->assertJsonPath('data.usuario_id', $user->id);
+    }
 
-    $response = $this
-        ->actingAs($user)
-        ->patch('/profile', [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+    public function test_update_profile()
+    {
+        $user = $this->authenticate();
+        $perfil = $user->perfil;
+
+        $response = $this->putJson("/api/v1/perfiles/{$perfil->id}", [
+            'nombre' => 'Test User',
         ]);
 
-    $response
-        ->assertSessionHasNoErrors()
-        ->assertRedirect('/profile');
+        $response->assertOk()->assertJsonPath('data.nombre', 'Test User');
+        $this->assertDatabaseHas('perfiles', ['id' => $perfil->id, 'nombre' => 'Test User']);
+    }
 
-    $user->refresh();
+    public function test_delete_profile()
+    {
+        $user = $this->authenticate();
+        $perfil = $user->perfil;
 
-    $this->assertSame('Test User', $user->name);
-    $this->assertSame('test@example.com', $user->email);
-    $this->assertNull($user->email_verified_at);
-});
+        $this->deleteJson("/api/v1/perfiles/{$perfil->id}")
+             ->assertNoContent();
 
-test('email verification status is unchanged when the email address is unchanged', function () {
-    $user = User::factory()->create();
-
-    $response = $this
-        ->actingAs($user)
-        ->patch('/profile', [
-            'name' => 'Test User',
-            'email' => $user->email,
-        ]);
-
-    $response
-        ->assertSessionHasNoErrors()
-        ->assertRedirect('/profile');
-
-    $this->assertNotNull($user->refresh()->email_verified_at);
-});
-
-test('user can delete their account', function () {
-    $user = User::factory()->create();
-
-    $response = $this
-        ->actingAs($user)
-        ->delete('/profile', [
-            'password' => 'password',
-        ]);
-
-    $response
-        ->assertSessionHasNoErrors()
-        ->assertRedirect('/');
-
-    $this->assertGuest();
-    $this->assertNull($user->fresh());
-});
-
-test('correct password must be provided to delete account', function () {
-    $user = User::factory()->create();
-
-    $response = $this
-        ->actingAs($user)
-        ->from('/profile')
-        ->delete('/profile', [
-            'password' => 'wrong-password',
-        ]);
-
-    $response
-        ->assertSessionHasErrorsIn('userDeletion', 'password')
-        ->assertRedirect('/profile');
-
-    $this->assertNotNull($user->fresh());
-});
+        $this->assertDatabaseMissing('perfiles', ['id' => $perfil->id]);
+    }
+}

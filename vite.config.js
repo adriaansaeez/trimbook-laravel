@@ -8,4 +8,7 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    define: {
+        'import.meta.env.VITE_APP_URL': JSON.stringify(process.env.APP_URL)
+      }
 });

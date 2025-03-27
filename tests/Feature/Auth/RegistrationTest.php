@@ -1,19 +1,26 @@
 <?php
 
-test('registration screen can be rendered', function () {
-    $response = $this->get('/register');
+namespace Tests\Feature\Api;
 
-    $response->assertStatus(200);
-});
+use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-test('new users can register', function () {
-    $response = $this->post('/register', [
-        'name' => 'Test User',
-        'email' => 'test@example.com',
-        'password' => 'password',
-        'password_confirmation' => 'password',
-    ]);
+class RegistrationApiTest extends TestCase
+{
+    use RefreshDatabase;
 
-    $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
-});
+    public function test_api_register_returns_token_and_creates_user()
+    {
+        $payload = [
+            'username'=>'juan',
+            'email'=>'juan@example.com',
+            'password'=>'secret123',
+            'password_confirmation'=>'secret123',
+        ];
+
+        $response = $this->postJson('/api/v1/register', $payload);
+
+        $response->assertCreated()->assertJsonStructure(['token']);
+        $this->assertDatabaseHas('users',['email'=>'juan@example.com']);
+    }
+}

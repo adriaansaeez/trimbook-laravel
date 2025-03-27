@@ -9,6 +9,8 @@ use App\Models\Estilista;
 use Illuminate\Http\Request;
 use App\Http\Resources\ReservaResource;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
+
 
 /**
  * Controlador API para gestionar reservas.
@@ -58,8 +60,29 @@ class ReservaController extends Controller
         ) {
             return response()->json(['message' => 'Hora ya reservada'], 422);
         }
+        
+        
 
         $reserva = Reserva::create(array_merge($data, ['user_id' => auth()->id()]));
+
+
+        //BOT PARA ENVIAR WASAPS
+        $phone = optional($reserva->user->perfil)->telefono;
+
+        if ($phone) {
+            Http::post(config('services.whatsapp_bot.url') . '/send', [
+                'phone'   => $phone,
+                'message' => "✅ Reserva confirmada para {$reserva->servicio->nombre} el {$reserva->fecha} a las {$reserva->hora}."
+            ]);
+        } else {
+            \Log::warning("El usuario {$reserva->user->id} no tiene teléfono en su perfil.");
+        }
+
+        // Enviar mensaje WhatsApp al microservicio Node
+        $response = Http::post(config('services.whatsapp_bot.url') . '/send', [
+            'phone'   => $phone,
+            'message' => "✅ Reserva confirmada..."
+        ]);
         return new ReservaResource($reserva);
     }
 

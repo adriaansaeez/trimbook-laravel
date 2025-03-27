@@ -13,6 +13,14 @@ axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 // Exportar Axios globalmente
 window.axios = axios;
 
+const api = axios.create({
+    baseURL: import.meta.env.VITE_APP_URL + '/api/v1',
+    withCredentials: true,
+    headers: {'Accept': 'application/json'},
+  });
+  
+export default api;
+
 // Exportar jQuery globalmente
 window.$ = window.jQuery = jQuery;
 
