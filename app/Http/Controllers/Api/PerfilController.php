@@ -7,13 +7,32 @@ use App\Models\Perfil;
 use Illuminate\Http\Request;
 use App\Http\Resources\PerfilResource;
 
+/**
+ * Controlador API para gestionar perfiles de usuario.
+ * Proporciona endpoints CRUD para listar, crear, ver, actualizar y eliminar perfiles.
+ */
 class PerfilController extends Controller
 {
+    /**
+     * Lista todos los perfiles paginados.
+     *
+     * GET /api/v1/perfiles
+     *
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     */
     public function index()
     {
         return PerfilResource::collection(Perfil::paginate(15));
     }
 
+    /**
+     * Crea un nuevo perfil asociado a un usuario existente.
+     *
+     * POST /api/v1/perfiles
+     *
+     * @param  Request  $request
+     * @return PerfilResource
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -27,14 +46,32 @@ class PerfilController extends Controller
         ]);
 
         $perfil = Perfil::create($data);
+
         return new PerfilResource($perfil);
     }
 
+    /**
+     * Muestra un perfil específico.
+     *
+     * GET /api/v1/perfiles/{perfil}
+     *
+     * @param  Perfil  $perfil
+     * @return PerfilResource
+     */
     public function show(Perfil $perfil)
     {
         return new PerfilResource($perfil);
     }
 
+    /**
+     * Actualiza los datos de un perfil existente.
+     *
+     * PUT|PATCH /api/v1/perfiles/{perfil}
+     *
+     * @param  Request  $request
+     * @param  Perfil   $perfil
+     * @return PerfilResource
+     */
     public function update(Request $request, Perfil $perfil)
     {
         $data = $request->validate([
@@ -47,12 +84,22 @@ class PerfilController extends Controller
         ]);
 
         $perfil->update($data);
+
         return new PerfilResource($perfil);
     }
 
+    /**
+     * Elimina un perfil existente.
+     *
+     * DELETE /api/v1/perfiles/{perfil}
+     *
+     * @param  Perfil  $perfil
+     * @return \Illuminate\Http\Response
+     */
     public function destroy(Perfil $perfil)
     {
         $perfil->delete();
+
         return response()->noContent();
     }
 }

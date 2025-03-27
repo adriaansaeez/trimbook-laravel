@@ -10,15 +10,37 @@ use Illuminate\Http\Request;
 use App\Http\Resources\ReservaResource;
 use Carbon\Carbon;
 
+/**
+ * Controlador API para gestionar reservas.
+ * Proporciona endpoints CRUD y métodos auxiliares para obtener estilistas disponibles
+ * y horarios libres basados en fecha y servicio.
+ */
 class ReservaController extends Controller
 {
+    /**
+     * Lista las reservas del usuario autenticado (paginadas).
+     *
+     * GET /api/v1/reservas
+     *
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     */
     public function index()
     {
         return ReservaResource::collection(
-            Reserva::with(['servicio','estilista'])->where('user_id', auth()->id())->paginate(15)
+            Reserva::with(['servicio','estilista'])
+                ->where('user_id', auth()->id())
+                ->paginate(15)
         );
     }
 
+    /**
+     * Crea una nueva reserva validando disponibilidad.
+     *
+     * POST /api/v1/reservas
+     *
+     * @param  Request  $request
+     * @return ReservaResource|\Illuminate\Http\JsonResponse
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -28,24 +50,41 @@ class ReservaController extends Controller
             'hora'         => 'required|date_format:H:i',
         ]);
 
+        // Verifica si ya existe reserva para esa fecha, hora y estilista
         if (Reserva::where('estilista_id', $data['estilista_id'])
             ->where('fecha', $data['fecha'])
             ->where('hora', $data['hora'])
             ->exists()
         ) {
-            return response()->json(['message'=>'Hora ya reservada'], 422);
+            return response()->json(['message' => 'Hora ya reservada'], 422);
         }
 
-        $reserva = Reserva::create(array_merge($data, ['user_id'=>auth()->id()]));
+        $reserva = Reserva::create(array_merge($data, ['user_id' => auth()->id()]));
         return new ReservaResource($reserva);
     }
 
+    /**
+     * Muestra los detalles de una reserva específica.
+     *
+     * GET /api/v1/reservas/{reserva}
+     *
+     * @param  Reserva  $reserva
+     * @return ReservaResource
+     */
     public function show(Reserva $reserva)
     {
         $this->authorize('view', $reserva);
         return new ReservaResource($reserva->load(['servicio','estilista']));
     }
 
+    /**
+     * Cancela (elimina) una reserva existente.
+     *
+     * DELETE /api/v1/reservas/{reserva}
+     *
+     * @param  Reserva  $reserva
+     * @return \Illuminate\Http\Response
+     */
     public function destroy(Reserva $reserva)
     {
         $this->authorize('delete', $reserva);
@@ -53,12 +92,33 @@ class ReservaController extends Controller
         return response()->noContent();
     }
 
+    /**
+     * Retorna una lista de estilistas que ofrecen un servicio dado.
+     *
+     * GET /api/v1/reservas/estilistas/{servicio_id}
+     *
+     * @param  int  $servicio_id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getEstilistas($servicio_id)
     {
-        $estilistas = Estilista::whereHas('servicios', fn($q)=> $q->where('servicios.id', $servicio_id))->get();
+        $estilistas = Estilista::whereHas('servicios', fn($q) =>
+            $q->where('servicios.id', $servicio_id)
+        )->get();
+
         return response()->json($estilistas);
     }
 
+    /**
+     * Calcula y retorna los horarios disponibles para un estilista en una fecha específica.
+     *
+     * GET /api/v1/reservas/horarios/{estilista_id}/{fecha}/{servicio_id}
+     *
+     * @param  int     $estilista_id
+     * @param  string  $fecha
+     * @param  int     $servicio_id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getHorarios($estilista_id, $fecha, $servicio_id)
     {
         $dia = strtoupper(Carbon::parse($fecha)->locale('es')->dayName);
@@ -66,21 +126,29 @@ class ReservaController extends Controller
         $dur = $servicio->duracion;
         $horarios = collect();
 
+        // Itera todos los horarios asignados al estilista
         foreach (Estilista::findOrFail($estilista_id)->horarios as $h) {
             foreach ($h->horario as $bloque) {
-                if (strtoupper($bloque['dia']) !== $dia) continue;
+                if (strtoupper($bloque['dia']) !== $dia) {
+                    continue;
+                }
+                // Itera cada intervalo de tiempo y genera slots según duración
                 foreach ($bloque['intervalos'] as $int) {
                     $start = Carbon::createFromFormat('H:i', $int['start']);
                     $end   = Carbon::createFromFormat('H:i', $int['end']);
+
                     while ($start->lt($end)) {
                         $slot = $start->format('H:i');
-                        if (!Reserva::where('estilista_id',$estilista_id)
-                            ->where('fecha',$fecha)
-                            ->where('hora',$slot)
+
+                        // Añade slot si no existe reserva en esa fecha/hora
+                        if (! Reserva::where('estilista_id', $estilista_id)
+                            ->where('fecha', $fecha)
+                            ->where('hora', $slot)
                             ->exists()
                         ) {
                             $horarios->push($slot);
                         }
+
                         $start->addMinutes($dur);
                     }
                 }
