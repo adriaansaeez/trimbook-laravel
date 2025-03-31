@@ -16,8 +16,6 @@ axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 // Exportar Axios globalmente
 window.axios = axios;
 
-
-
 // Exportar jQuery globalmente
 window.$ = window.jQuery = jQuery;
 

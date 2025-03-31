@@ -7,6 +7,8 @@ use App\Models\Servicio;
 use App\Models\Estilista;
 use App\Models\Horario;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
+
 
 class ReservaController extends Controller
 {
@@ -25,35 +27,55 @@ class ReservaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'servicio_id' => 'required|exists:servicios,id',
+            'servicio_id'  => 'required|exists:servicios,id',
             'estilista_id' => 'required|exists:estilistas,id',
-            'fecha' => 'required|date|after_or_equal:today',
-            'hora' => [
+            'fecha'        => 'required|date|after_or_equal:today',
+            'hora'         => [
                 'required',
                 function ($attribute, $value, $fail) use ($request) {
-                    $existe = Reserva::where('estilista_id', $request->estilista_id)
+                    if (Reserva::where('estilista_id', $request->estilista_id)
                         ->where('fecha', $request->fecha)
                         ->where('hora', $value)
-                        ->exists();
-                    if ($existe) {
+                        ->exists()
+                    ) {
                         $fail('La hora seleccionada ya está reservada.');
                     }
                 },
             ],
         ]);
-        
 
-        // Guardar reserva
-        Reserva::create([
-            'user_id' => auth()->id(),
-            'servicio_id' => $request->servicio_id,
+        // Crear reserva en BD
+        $reserva = Reserva::create([
+            'user_id'      => auth()->id(),
+            'servicio_id'  => $request->servicio_id,
             'estilista_id' => $request->estilista_id,
-            'fecha' => $request->fecha,
-            'hora' => $request->hora,
+            'fecha'        => $request->fecha,
+            'hora'         => $request->hora,
         ]);
 
-        return redirect()->route('reservas.index')->with('success', 'Reserva creada correctamente.');
+        // Obtener teléfono desde perfil
+        $phone = optional($reserva->user->perfil)->telefono;
+
+        if ($phone) {
+            // Llamada al microservicio Node.js
+            $response = Http::post(config('services.whatsapp_bot.url') . '/send', [
+                'phone'   => $phone,
+                'message' => "✅ Reserva confirmada para {$reserva->servicio->nombre} el {$reserva->fecha} a las {$reserva->hora}.",
+            ]);
+
+            // Registrar resultado en logs
+            \Log::info('WhatsApp bot response', [
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
+        } else {
+            \Log::warning("El usuario {$reserva->user->id} no tiene teléfono en su perfil.");
+        }
+
+        return redirect()->route('reservas.index')
+                        ->with('success', 'Reserva creada correctamente y notificación enviada.');
     }
+
     public function destroy(Reserva $reserva)
     {
         // Verificar que el usuario autenticado es el dueño de la reserva o un admin
