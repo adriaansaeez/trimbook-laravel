@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Horario;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
+
 
 class HorarioController extends Controller
 {
@@ -99,4 +101,5 @@ class HorarioController extends Controller
         $horario->delete();
         return redirect()->route('horarios.index')->with('success', 'Horario eliminado.');
     }
+    
 }

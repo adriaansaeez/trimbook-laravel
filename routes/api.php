@@ -42,6 +42,6 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('reservas', ReservaController::class);
     Route::get('reservas/estilistas/{servicio_id}', [ReservaController::class, 'getEstilistas']);
     Route::get('reservas/horarios/{estilista_id}/{fecha}/{servicio_id}', [ReservaController::class, 'getHorarios']);
-
+    Route::get('horarios-estilista/dias-disponibles/{estilista_id}', [ReservaController::class, 'getDiasDisponibles']);
 
 });

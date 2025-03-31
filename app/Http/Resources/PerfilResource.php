@@ -38,8 +38,9 @@ class PerfilResource extends JsonResource
             'instagram_url' => $this->instagram_url,
 
             // Timestamps en formato legible
-            'created_at'    => $this->created_at->toDateTimeString(),
-            'updated_at'    => $this->updated_at->toDateTimeString(),
+            'created_at' => $this->created_at ? $this->created_at->toDateTimeString() : null,
+            'updated_at' => $this->updated_at ? $this->updated_at->toDateTimeString() : null,
+
         ];
     }
 }

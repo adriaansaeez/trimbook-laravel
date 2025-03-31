@@ -23,8 +23,11 @@
         @include('layouts.navigation')
 
         <div class="flex flex-1">
+            @role('admin|estilista')
             <!-- Sidebar -->
             @include('layouts.sidebar')
+
+            @endrole
 
             <!-- Contenido principal -->
             <div class="flex-1">

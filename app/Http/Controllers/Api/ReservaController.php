@@ -9,6 +9,7 @@ use App\Models\Estilista;
 use Illuminate\Http\Request;
 use App\Http\Resources\ReservaResource;
 use Carbon\Carbon;
+use App\Models\HorariosEstilista;
 
 /**
  * Controlador API para gestionar reservas.
@@ -157,4 +158,62 @@ class ReservaController extends Controller
 
         return response()->json($horarios->unique()->values());
     }
+    /**
+     * Retorna las fechas disponibles (próximos 30 días) en que el estilista trabaja,
+     * basándose en los registros de horarios_estilista y la información en la columna 'horario'.
+     *
+     * GET /api/v1/horarios-estilista/dias-disponibles/{estilista_id}
+     *
+     * @param int $estilista_id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getDiasDisponibles($estilista_id)
+{
+    $availableDates = [];
+    $today = Carbon::today();
+    $endDate = Carbon::today()->addDays(30);
+
+    // Obtener todos los registros activos para el estilista
+    $schedules = HorariosEstilista::with('horario') // asumiendo relación "horario" en el modelo
+        ->where('estilista_id', $estilista_id)
+        ->whereDate('fecha_inicio', '<=', $today->format('Y-m-d'))
+        ->whereDate('fecha_fin', '>=', $today->format('Y-m-d'))
+        ->get();
+
+    // Si no hay horarios activos, devolver un array vacío
+    if ($schedules->isEmpty()) {
+        return response()->json([]);
+    }
+
+    // Recorrer cada día en el rango
+    for ($date = $today->copy(); $date->lte($endDate); $date->addDay()) {
+        // Obtenemos el nombre del día en mayúsculas (ej: "LUNES")
+        $dayName = strtoupper($date->locale('es')->dayName);
+        $works = false;
+
+        // Revisar cada registro de horarios para ver si el día actual está permitido
+        foreach ($schedules as $schedule) {
+            $horario = is_array($schedule->horario) ? $schedule->horario : json_decode($schedule->horario, true);
+            if (!is_array($horario)) {
+                continue;
+            }
+            foreach ($horario as $dayData) {
+                if (!is_array($dayData) || !isset($dayData['dia'])) {
+                    continue;
+                }
+                if (strtoupper($dayData['dia']) === $dayName && isset($dayData['intervalos']) && count($dayData['intervalos']) > 0) {
+                    $works = true;
+                    break 2;
+                }
+            }
+        }
+
+        if ($works) {
+            $availableDates[] = $date->format('Y-m-d');
+        }
+    }
+
+    return response()->json($availableDates);
+}
+
 }
