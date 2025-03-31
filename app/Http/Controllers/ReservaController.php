@@ -53,24 +53,6 @@ class ReservaController extends Controller
             'hora'         => $request->hora,
         ]);
 
-        // Obtener teléfono desde perfil
-        $phone = optional($reserva->user->perfil)->telefono;
-
-        if ($phone) {
-            // Llamada al microservicio Node.js
-            $response = Http::post(config('services.whatsapp_bot.url') . '/send', [
-                'phone'   => $phone,
-                'message' => "✅ Reserva confirmada para {$reserva->servicio->nombre} el {$reserva->fecha} a las {$reserva->hora}.",
-            ]);
-
-            // Registrar resultado en logs
-            \Log::info('WhatsApp bot response', [
-                'status' => $response->status(),
-                'body'   => $response->body(),
-            ]);
-        } else {
-            \Log::warning("El usuario {$reserva->user->id} no tiene teléfono en su perfil.");
-        }
 
         return redirect()->route('reservas.index')
                         ->with('success', 'Reserva creada correctamente y notificación enviada.');
