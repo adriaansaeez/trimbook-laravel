@@ -68,6 +68,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/asignar-horario', [EstilistaController::class, 'vistaAsignarHorarioIndex'])->name('asignar_horario.index');
         Route::get('/asignar-horario/create/{estilista}', [EstilistaController::class, 'vistaAsignarHorarioForm'])->name('asignar_horario.create');
         Route::post('/asignar-horario/store/{estilista}', [EstilistaController::class, 'guardarAsignacionHorario'])->name('asignar_horario.store');
+        // Asegúrate de que la ruta espera un parámetro llamado 'id'
+        Route::delete('/dashboard/horarios-estilista/{id}', [EstilistaController::class, 'eliminarHorarioPivote'])->name('horarios_estilista.delete');
+
 
 
      

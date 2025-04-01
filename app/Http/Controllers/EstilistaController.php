@@ -9,6 +9,7 @@ use Spatie\Permission\Models\Role;
 use App\Models\Horario;
 use Illuminate\Support\Facades\Log;
 use App\Models\Servicio;
+use App\Models\HorariosEstilista;
 
 class EstilistaController extends Controller
 {
@@ -148,15 +149,21 @@ class EstilistaController extends Controller
 
         $estilista = Estilista::findOrFail($id);
 
-        // Evita duplicados del mismo horario y rango
+        // Comprobación de solapamiento
         $yaExiste = $estilista->horarios()
-            ->wherePivot('horario_id', $request->horario_id)
-            ->wherePivot('fecha_inicio', $request->fecha_inicio)
-            ->wherePivot('fecha_fin', $request->fecha_fin)
+            ->where(function($query) use ($request) {
+                $query->where(function($query) use ($request) {
+                    $query->where('fecha_inicio', '<=', $request->fecha_inicio)
+                        ->where('fecha_fin', '>=', $request->fecha_inicio);
+                })->orWhere(function($query) use ($request) {
+                    $query->where('fecha_inicio', '<=', $request->fecha_fin)
+                        ->where('fecha_fin', '>=', $request->fecha_fin);
+                });
+            })
             ->exists();
 
         if ($yaExiste) {
-            return back()->with('error', 'Este horario ya ha sido asignado con ese rango de fechas.');
+            return back()->with('error', 'Existe un solapamiento con otro horario asignado.');
         }
 
         // Asignar horario con fechas
@@ -168,6 +175,17 @@ class EstilistaController extends Controller
         return redirect()->route('asignar_horario.index', ['estilista_id' => $estilista->id])
             ->with('success', 'Horario asignado correctamente.');
     }
+
+
+    public function eliminarHorarioPivote($id)
+    {
+        HorariosEstilista::findOrFail($id)->delete();
+        return back()->with('success', 'Horario eliminado correctamente.');
+    }
+
+
+
+
     public function formAsignarServicios()
     {
         $estilistas = Estilista::all();

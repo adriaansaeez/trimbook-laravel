@@ -24,14 +24,19 @@
     @if($estilistaSeleccionado)
         <h2 class="text-lg font-bold mb-3">Horarios asignados a {{ $estilistaSeleccionado->nombre }}</h2>
 
-        @if($horarios->count())
+        @if($estilistaSeleccionado->horarios->isNotEmpty())
             <ul class="mb-4 space-y-2">
-            @foreach($horarios as $horario)
-                <li class="border rounded p-3 bg-gray-50">
-                    {{ $horario->nombre }} - {{ $horario->hora_inicio }} a {{ $horario->hora_fin }}<br>
-                    <span class="text-sm text-gray-600">Del {{ $horario->pivot->fecha_inicio }} al {{ $horario->pivot->fecha_fin }}</span>
+            @foreach($estilistaSeleccionado->horarios as $horario)
+                <li>
+                    {{ $horario->nombre }} - Desde: {{ $horario->pivot->fecha_inicio }} Hasta: {{ $horario->pivot->fecha_fin }}
+                    <form method="POST" action="{{ route('horarios_estilista.delete', ['id' => $horario->pivot->id]) }}">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
                 </li>
             @endforeach
+
 
             </ul>
         @else
