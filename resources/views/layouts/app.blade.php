@@ -17,21 +17,23 @@
 </head>
 
 <body class="font-sans antialiased">
-    <div x-data="{ openSidebar: false }" class="min-h-screen bg-gray-100 flex flex-col">
+    <div x-data="{ expanded: true }" class="min-h-screen bg-gray-100 flex flex-col">
 
         <!-- Navegación principal -->
-        @include('layouts.navigation')
+        <div :class="expanded ? 'ml-64' : 'ml-16'" class="transition-all duration-300">
+            @include('layouts.navigation')
+        </div>
 
         <div class="flex flex-1">
             @role('admin|estilista')
             <!-- Sidebar -->
-            @include('layouts.sidebar')
+                @include('layouts.sidebar')
 
             @endrole
 
             <!-- Contenido principal -->
-            <div class="flex-1">
-                <!-- Page Heading -->
+            <div :class="expanded ? 'ml-64' : 'ml-16'" class="transition-all duration-300 flex-1">
+            <!-- Page Heading -->
                 @isset($header)
                     <header class="bg-white shadow">
                         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">

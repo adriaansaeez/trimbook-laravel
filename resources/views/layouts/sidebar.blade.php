@@ -1,6 +1,6 @@
-<aside x-data="{ expanded: true, openDropdown: '' }"
-       class="fixed top-0 left-0 z-50 h-screen bg-white shadow-md transition-all duration-300 overflow-y-auto"
-       :class="expanded ? 'w-64 px-2 py-6' : 'w-16 px-2 py-6'">
+<aside x-data="{ openDropdown: '' }"
+       class="absolute top-0 left-0 h-screen bg-white shadow-md transition-all duration-300 overflow-y-auto"
+       :class="expanded ? 'w-64' : 'w-16'">
 
     <!-- Botón para expandir/contraer -->
     <button @click="expanded = !expanded" class="absolute top-4 left-4 text-gray-600 z-50">
@@ -12,12 +12,12 @@
     </button>
 
     <!-- Título -->
-    <h2 class="text-lg font-semibold text-gray-700 text-center mb-4 mt-12" x-show="expanded" x-transition>
+    <h2 class="text-lg font-semibold text-gray-700 text-center mb-4 mt-20" x-show="expanded" x-transition>
         Panel de Control
     </h2>
 
     <!-- Navegación -->
-    <nav class="mt-6">
+    <nav :class="expanded ? 'mt-10' : 'mt-20'">
         <ul>
             <!-- CRUDs Dropdown -->
             <li class="relative">
