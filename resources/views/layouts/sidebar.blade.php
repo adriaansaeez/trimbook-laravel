@@ -1,9 +1,9 @@
 <aside x-data="{ expanded: true, openDropdown: '' }"
-       class="bg-white shadow-md h-screen px-2 py-6 transition-all duration-300"
-       :class="expanded ? 'w-64' : 'w-16'">
+       class="fixed top-0 left-0 z-50 h-screen bg-white shadow-md transition-all duration-300 overflow-y-auto"
+       :class="expanded ? 'w-64 px-2 py-6' : 'w-16 px-2 py-6'">
 
     <!-- Botón para expandir/contraer -->
-    <button @click="expanded = !expanded" class="absolute top-4 left-4 text-gray-600">
+    <button @click="expanded = !expanded" class="absolute top-4 left-4 text-gray-600 z-50">
         <svg class="w-6 h-6 transition-transform transform"
              :class="expanded ? '' : 'rotate-180'" xmlns="http://www.w3.org/2000/svg"
              fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -12,13 +12,13 @@
     </button>
 
     <!-- Título -->
-    <h2 class="text-lg font-semibold text-gray-700 text-center mb-4" x-show="expanded" x-transition>
+    <h2 class="text-lg font-semibold text-gray-700 text-center mb-4 mt-12" x-show="expanded" x-transition>
         Panel de Control
     </h2>
 
+    <!-- Navegación -->
     <nav class="mt-6">
         <ul>
-
             <!-- CRUDs Dropdown -->
             <li class="relative">
                 <button @click="openDropdown === 'cruds' ? openDropdown = '' : openDropdown = 'cruds'"
