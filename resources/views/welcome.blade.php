@@ -18,73 +18,102 @@
     <body class="bg-[#FDFDFC] text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col">
         <header class="w-full lg:max-w-4xl max-w-[335px] text-sm mb-6 not-has-[nav]:hidden">
             @if (Route::has('login'))
-            <nav class="flex items-center justify-between w-full">
+            <nav class="flex items-center justify-between w-full bg-white py-3 px-4 shadow-sm">
                 {{-- Logo a la izquierda --}}
                 <div class="flex items-center">
                     <a href="{{ url('/') }}">
-                        <img src="{{ asset('images/trimbook-logo-light-removebg.png') }}" alt="TrimBook Logo" class="h-12">
+                        <img src="{{ asset('images/trimbook-logo-light-removebg.png') }}" alt="TrimBook Logo" class="h-10">
                     </a>
                 </div>
 
-                {{-- Enlaces a la derecha --}}
+                {{-- Acciones a la derecha --}}
                 <div class="flex items-center gap-4">
-                    @auth
-                        <a
-                            href="{{ url('/dashboard') }}"
-                            class="inline-block px-5 py-1.5 text-black border-blue hover:border-[#1915014a] border text-[#1b1b18] rounded-sm text-sm leading-normal"
-                        >
-                            Dashboard
-                        </a>
-                    @else
-                        <a
-                            href="{{ route('login') }}"
-                            class="inline-block px-5 py-1.5 text-blue-500 border border-transparent hover:border-blue-500 rounded-sm text-sm leading-normal"
-                        >
-                            Log in
+                    @guest
+                        {{-- Botón inicio sesión/registro --}}
+                        <a href="{{ route('login') }}" class="flex items-center gap-2 text-sm font-medium text-gray-800 hover:text-blue-500">
+                            
+                            Iniciar sesión / <span class="font-semibold">Registrarse</span>
                         </a>
 
-                        @if (Route::has('register'))
-                            <a
-                                href="{{ route('register') }}"
-                                class="inline-block px-5 py-1.5 text-white font-semibold bg-blue-500 border-[#19140035] hover:border-[#1915014a] border text-[#1b1b18] rounded-sm text-sm leading-normal"
-                            >
-                                Register
-                            </a>
-                        @endif
+                        {{-- Botón de cambio de contacto --}}
+                        <button id="themeToggle" class="inline-flex items-center gap-1 px-4 py-1.5 text-sm text-white border border-gray-300 rounded bg-orange-400 hover:bg-orange-600 hover:text-white transition">
+                            <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 3v1.5m0 15V21m9-9h-1.5M3 12H1.5m16.95-6.45L17.1 7.1m-10.2 10.2-1.35 1.35m12.75 0-1.35-1.35M6.9 6.9 5.55 5.55" />
+                            </svg>
+                            Incluye tu negocio 
+                        </button>
+                    @endguest
+
+                    @auth
+                        <a href="{{ url('/dashboard') }}"
+                            class="inline-block px-4 py-1.5 text-sm text-gray-800 border border-blue-500 rounded hover:bg-blue-50">
+                            Dashboard
+                        </a>
                     @endauth
                 </div>
             </nav>
+
 
             @endif
         </header>
         <div class="bg-white text-[#1b1b18]">
             {{-- Hero --}}
-            <section class="text-center py-20 bg-gradient-to-br from-purple-600 to-pink-400 text-white">
-                <h2 class="text-4xl font-bold mb-4">Reserva tu estilo en segundos</h2>
-                <p class="text-lg mb-6">Citas rápidas, estilistas profesionales y sin complicaciones.</p>
-                <a href="{{ route('login') }}" class="bg-white text-purple-600 font-semibold px-6 py-3 rounded shadow hover:bg-gray-100 transition">
-                    Reservar ahora
-                </a>
+            <section class="flex flex-col-reverse lg:flex-row items-center justify-between px-6 py-20 max-w-7xl mx-auto">
+                <div class="max-w-xl text-center lg:text-left">
+                    <h1 class="text-6xl font-bold text-blue-500 mb-4">Gestión inteligente para tu barbería</h1>
+                    <p class="text-lg text-gray-700 mb-4">Olvídate del papeleo, agenda y controla tu negocio desde un solo lugar.</p>
+                    <p class="text-sm text-gray-600 mb-6">TrimBook es el software de gestión para barberías que te permite administrar reservas, empleados y finanzas de forma sencilla.</p>
+                    <div class="flex justify-center lg:justify-start gap-4">
+                        <a href="{{ route('login') }}" class="bg-orange-400 text-white font-semibold px-6 py-3 rounded shadow hover:bg-orange-500 transition">Probar gratis</a>
+                        <a href="#servicios" class="px-6 py-3 border border-blue-500 text-blue-500 rounded hover:bg-blue-50 transition">Ver funcionalidades</a>
+                    </div>
+                </div>
+                <div class="mb-8 lg:mb-0">
+                    <img src="{{ asset('images/trimbi.png') }}" alt="Mascota TrimBook" class="w-96 mx-auto lg:mx-0">
+                </div>
             </section>
 
-            {{-- Servicios populares --}}
-            <section class="py-16 px-6 max-w-6xl mx-auto">
-                <h3 class="text-3xl font-semibold text-center mb-10">Servicios populares</h3>
+            {{-- Funcionalidades destacadas --}}
+            <section class="py-16 px-6 max-w-6xl mx-auto bg-white" id="servicios">
+                <h3 class="text-3xl font-semibold text-center mb-10 text-blue-500">Funcionalidades destacadas</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     @foreach ([
-                        ['title' => 'Corte de cabello', 'desc' => 'Resalta tu estilo', 'price' => 'Desde 15€'],
-                        ['title' => 'Afeitado', 'desc' => 'Afeitado clásico o moderno', 'price' => 'Desde 10€'],
-                        ['title' => 'Recorte de barba', 'desc' => 'Define tu perfil', 'price' => 'Desde 12€'],
-                        ['title' => 'Tinte para el cabello', 'desc' => 'Colores vibrantes o naturales', 'price' => 'Desde 25€'],
-                    ] as $service)
-                        <div class="border rounded-lg p-4 text-center shadow hover:shadow-md transition">
-                            <h4 class="text-lg font-semibold">{{ $service['title'] }}</h4>
-                            <p class="text-sm text-gray-600">{{ $service['desc'] }}</p>
-                            <p class="mt-2 font-bold">{{ $service['price'] }}</p>
+                        ['title' => 'Gestión de citas', 'desc' => 'Organiza las reservas automáticamente y evita solapes.', 'icon' => '📅'],
+                        ['title' => 'Control de empleados', 'desc' => 'Administra horarios, ausencias y rendimiento de tu equipo.', 'icon' => '👥'],
+                        ['title' => 'Resumen financiero', 'desc' => 'Visualiza ingresos por día, semana o mes y controla tu caja.', 'icon' => '💰'],
+                        ['title' => 'Notificaciones automáticas', 'desc' => 'Envía recordatorios por email o SMS a tus clientes.', 'icon' => '🔔'],
+                    ] as $feature)
+                        <div class="border rounded-lg p-6 text-center shadow hover:shadow-md transition bg-[#FDFDFC]">
+                            <div class="text-4xl mb-4">{{ $feature['icon'] }}</div>
+                            <h4 class="text-lg font-semibold text-blue-500">{{ $feature['title'] }}</h4>
+                            <p class="text-sm text-gray-600 mt-2">{{ $feature['desc'] }}</p>
                         </div>
                     @endforeach
                 </div>
             </section>
+
+            {{-- Hero 2 --}}
+            <section class="flex flex-col-reverse lg:flex-row items-center justify-between px-6 py-20 max-w-7xl mx-auto">
+                {{-- Columna izquierda: Mascota --}}
+                <div class="lg:w-1/2 mb-10 lg:mb-0 flex justify-center">
+                    <img src="{{ asset('images/trimbi-pelando.png') }}" alt="Mascota TrimBook" class="w-96">
+                </div>
+
+                {{-- Columna derecha: Texto y botones --}}
+                <div class="lg:w-1/2 text-center lg:text-left">
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-blue-500 mb-4">Ocupate de tu negocio</h1>
+                    <p class="text-lg text-gray-700 mb-4">Nosotros nos ocupamos del resto.</p>
+                    <p class="text-sm text-gray-600 mb-6">TrimBook es el software de gestión para barberías que te permite administrar reservas, empleados y finanzas de forma sencilla.</p>
+                    <div class="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
+                        <a href="{{ route('login') }}" class="bg-orange-400 text-white font-semibold px-6 py-3 rounded shadow hover:bg-orange-500 transition">Probar gratis</a>
+                        <a href="#servicios" class="px-6 py-3 border border-blue-500 text-blue-500 rounded hover:bg-blue-50 transition">Ver funcionalidades</a>
+                    </div>
+                </div>
+            </section>
+
+
 
             {{-- Cómo funciona --}}
             <section class="bg-gray-100 py-16 px-6">
