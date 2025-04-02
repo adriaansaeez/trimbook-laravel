@@ -13,11 +13,17 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        <style>
+            html, body {
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
     </head>
     <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
-
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
+        <div class="h-full flex flex-col sm:justify-center items-center">
+            <div class="w-full px-6 py-4 bg-white overflow-hidden sm:rounded-lg">
                 {{ $slot }}
             </div>
         </div>

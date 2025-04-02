@@ -1,59 +1,78 @@
-<body class="font-sans text-gray-900 antialiased bg-[#FDFDFC]">
-    <div class="min-h-screen flex items-center justify-center px-4">
+<x-guest-layout>
+    <div class="min-h-screen bg-[#FDFDFC] flex items-center justify-center">
+        <div class="flex flex-col lg:flex-row bg-white rounded-lg max-w-5xl w-full overflow-hidden">
 
-        {{-- Card de login --}}
-        <div class="w-full max-w-md bg-white rounded-lg p-6 shadow">
-
-            {{-- Logo y título juntos --}}
-            <div class="mb-6 text-center">
-                <a href="{{ url('/') }}">
-                    <img src="{{ asset('images/trimbook-logo-light-removebg.png') }}" alt="TrimBook Logo" class="h-10 mx-auto mb-2">
-                </a>
-                <h1 class="text-3xl font-bold text-blue-500">Iniciar sesión</h1>
+            {{-- Columna izquierda: Frases --}}
+            <div class="hidden lg:flex flex-col justify-center w-2/5 px-10 py-10 space-y-6 bg-white">
+                <div>
+                    <h2 class="text-2xl font-semibold text-blue-500">Optimiza tu barbería</h2>
+                    <p class="text-gray-600 text-sm">Con TrimBook, olvídate del caos de agendas.</p>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-semibold text-blue-500">Control total del equipo</h2>
+                    <p class="text-gray-600 text-sm">Gestiona turnos, horarios y rendimiento fácilmente.</p>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-semibold text-blue-500">Cifras que importan</h2>
+                    <p class="text-gray-600 text-sm">Visualiza tus ingresos y estadísticas al instante.</p>
+                </div>
             </div>
 
-            {{-- Formulario --}}
-            <form method="POST" action="{{ route('login') }}">
-                @csrf
-
-                {{-- Email --}}
-                <div>
-                    <x-input-label for="email" :value="__('Email')" />
-                    <x-text-input id="email" class="block mt-1 w-full" type="email" name="email"
-                        :value="old('email')" required autofocus autocomplete="username" />
-                    <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            {{-- Columna derecha: Formulario --}}
+            <div class="w-full lg:w-3/5 p-10">
+                <div class="mb-6 text-center">
+                    <a href="{{ url('/') }}">
+                        <img src="{{ asset('images/trimbook-logo-light-removebg.png') }}" class="h-10 mx-auto" alt="TrimBook Logo">
+                    </a>
+                    <h1 class="text-2xl font-bold text-blue-500 mt-4">Crea tu cuenta</h1>
                 </div>
 
-                {{-- Password --}}
-                <div class="mt-4">
-                    <x-input-label for="password" :value="__('Password')" />
-                    <x-text-input id="password" class="block mt-1 w-full" type="password"
-                        name="password" required autocomplete="current-password" />
-                    <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                </div>
+                <form method="POST" action="{{ route('register') }}" class="space-y-4">
+                    @csrf
 
-                {{-- Remember Me --}}
-                <div class="block mt-4">
-                    <label for="remember_me" class="inline-flex items-center">
-                        <input id="remember_me" type="checkbox"
-                            class="rounded border-gray-300 text-blue-500 shadow-sm focus:ring-blue-400" name="remember">
-                        <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
-                    </label>
-                </div>
+                    <!-- Name -->
+                    <div>
+                        <x-input-label for="name" :value="__('Nombre')" />
+                        <x-text-input id="name" class="block mt-1 w-full" type="text" name="name"
+                            :value="old('name')" required autofocus autocomplete="name" />
+                        <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                    </div>
 
-                {{-- Botones --}}
-                <div class="flex items-center justify-between mt-6">
-                    @if (Route::has('password.request'))
-                        <a class="text-sm text-blue-500 hover:underline" href="{{ route('password.request') }}">
-                            {{ __('Forgot your password?') }}
+                    <!-- Email -->
+                    <div>
+                        <x-input-label for="email" :value="__('Email')" />
+                        <x-text-input id="email" class="block mt-1 w-full" type="email" name="email"
+                            :value="old('email')" required autocomplete="username" />
+                        <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                    </div>
+
+                    <!-- Password -->
+                    <div>
+                        <x-input-label for="password" :value="__('Contraseña')" />
+                        <x-text-input id="password" class="block mt-1 w-full" type="password"
+                            name="password" required autocomplete="new-password" />
+                        <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div>
+                        <x-input-label for="password_confirmation" :value="__('Confirmar contraseña')" />
+                        <x-text-input id="password_confirmation" class="block mt-1 w-full"
+                            type="password" name="password_confirmation" required autocomplete="new-password" />
+                        <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center justify-between pt-4">
+                        <a class="text-sm text-blue-500 hover:underline" href="{{ route('login') }}">
+                            ¿Ya tienes cuenta?
                         </a>
-                    @endif
-
-                    <x-primary-button class="bg-orange-400 hover:bg-orange-500">
-                        {{ __('Log in') }}
-                    </x-primary-button>
-                </div>
-            </form>
+                        <x-primary-button class="bg-orange-400 hover:bg-orange-500">
+                            {{ __('Registrarse') }}
+                        </x-primary-button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</body>
+</x-guest-layout>
