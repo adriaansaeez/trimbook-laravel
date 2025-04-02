@@ -79,9 +79,37 @@ class ReservaController extends Controller
         return response()->json($estilistas);
     }
 
+    public function cambiarEstado(Request $request, Reserva $reserva)
+    {
+        $user = auth()->user();
 
-    
+        if (!$user->estilista || $user->estilista->id !== $reserva->estilista_id) {
+            return redirect()->back()->with('error', 'No autorizado');
+        }
 
+        $validated = $request->validate([
+            'estado' => 'required|in:PENDIENTE,CONFIRMADA,CANCELADA'
+        ]);
+
+        $reserva->estado = $validated['estado'];
+        $reserva->save();
+
+        return redirect()->back()->with('success', 'Estado actualizado correctamente');
+    }
+
+    public function cancelar(Reserva $reserva)
+    {
+        $user = auth()->user();
+
+        if ($user->id !== $reserva->user_id) {
+            return redirect()->back()->with('error', 'No autorizado');
+        }
+
+        $reserva->estado = 'CANCELADA';
+        $reserva->save();
+
+        return redirect()->back()->with('success', 'Reserva cancelada con éxito');
+    }
 
 }
 

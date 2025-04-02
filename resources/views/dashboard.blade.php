@@ -9,10 +9,11 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg ">
-                <div class="p-5 flex flex-col">
-                <x-calendario-semanal :estilista-id="1" :semana="request('semana')" />
-
-                    
+                <div class="card">
+                <x-listado-reservas :cliente-id="1" />
+                </div>
+                <div class="card p-5 flex flex-col">
+                    <x-calendario-semanal :estilista-id="1" :semana="request('semana')" />
                 </div>
             </div>
         </div>

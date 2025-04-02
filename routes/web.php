@@ -85,6 +85,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 // Grupo de rutas protegidas para ADMIN y ESTILISTA dentro de "dashboard"
 Route::middleware(['auth', 'role:admin|estilista'])->prefix('dashboard')->group(function () {
     // Aquí puedes agregar rutas específicas para estilistas y administradores si las necesitas
+    Route::put('/reservas/{reserva}/estado', [ReservaController::class, 'cambiarEstado'])->name('reservas.cambiarEstado');
+
 });
 
 // Grupo de rutas protegidas para TODOS (admin, estilista, cliente)
@@ -98,6 +100,10 @@ Route::middleware(['auth', 'role:admin|estilista|cliente'])->group(function () {
     // Rutas para carga de datos dinámicos vía AJAX con Axios
     Route::get('/reservas/estilistas/{servicio_id}', [ReservaController::class, 'getEstilistas']);
     Route::get('/reservas/horarios/{estilista_id}/{fecha}/{servicio_id}', [ReservaController::class, 'getHorarios']);
+
+    //Ruta Cancelar Reserva
+    Route::delete('/reservas/{reserva}', [ReservaController::class, 'cancelar'])->name('reservas.cancelar');
+
 
 });
 
