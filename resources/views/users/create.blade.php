@@ -8,8 +8,8 @@
         @csrf
 
         <div class="mb-4">
-            <label for="name" class="block text-sm font-medium text-gray-700">Nombre</label>
-            <input type="text" name="name" id="name" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" required>
+            <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+            <input type="text" name="username" id="username" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" required>
         </div>
 
         <div class="mb-4">
