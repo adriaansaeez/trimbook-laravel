@@ -7,11 +7,18 @@ use App\Http\Controllers\EstilistaController;
 use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\HorarioController;
+use App\Http\Controllers\HomeController;
 
 
 // Ruta principal accesible para todos (sin autenticación)
 Route::get('/', function () {
     return view('welcome');
+});
+
+// Ruta de inicio para usuarios autenticados
+Route::middleware(['auth'])->group(function () {
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/calendario-data', [HomeController::class, 'getCalendarioData'])->name('calendario.data');
 });
 
 // Grupo de rutas protegidas solo para ADMIN
@@ -103,8 +110,9 @@ Route::middleware(['auth', 'role:admin|estilista|cliente'])->group(function () {
 
     //Ruta Cancelar Reserva
     Route::delete('/reservas/{reserva}', [ReservaController::class, 'cancelar'])->name('reservas.cancelar');
-
-
+    
+    //Ruta Confirmar Reserva
+    Route::post('/reservas/{reserva}/confirmar', [ReservaController::class, 'confirmar'])->name('reservas.confirmar');
 });
 
 

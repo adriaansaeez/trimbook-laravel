@@ -111,5 +111,20 @@ class ReservaController extends Controller
         return redirect()->back()->with('success', 'Reserva cancelada con éxito');
     }
 
+    public function confirmar(Reserva $reserva)
+    {
+        $user = auth()->user();
+
+        // Verificar que el usuario es el estilista asignado a la reserva
+        if (!$user->estilista || $user->estilista->id !== $reserva->estilista_id) {
+            return redirect()->back()->with('error', 'No autorizado para confirmar esta reserva');
+        }
+
+        // Actualizar el estado de la reserva
+        $reserva->estado = 'CONFIRMADA';
+        $reserva->save();
+
+        return redirect()->back()->with('success', 'Reserva confirmada con éxito');
+    }
 }
 

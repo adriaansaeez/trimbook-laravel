@@ -44,7 +44,6 @@
               @endforeach
             </select>
           </div>
-
           <div class="mb-4">
             <label class="block text-sm font-medium">Estilista</label>
             <select name="estilista_id" id="estilista" class="w-full p-2 border rounded-md" disabled>
@@ -80,19 +79,28 @@
 
     <!-- Paso 2: Seleccionar Fecha y Hora -->
     <div class="form-step" id="step-2" style="display:none;">
-      <div class="mb-4 flex gap-4">
-        <div class="w-1/2">
-          <label class="block text-sm font-medium">Fecha</label>
-          <!-- Input para Pikaday: readonly y sin autocomplete para evitar que se escriba manualmente -->
-          <input readonly type="text" name="fecha" id="fecha" class="w-full p-2 border rounded-md" disabled autocomplete="off">
+      <div class="mb-4 flex flex-col items-center gap-4">
+        <div class="w-full flex flex-col">
+          <label class="block text-sm font-medium text-left mb-1">Fecha</label>
+          <!-- Ajustamos el ancho del input de fecha a la mitad (o un tamaño fijo) -->
+          <input 
+            readonly 
+            type="text" 
+            name="fecha" 
+            id="fecha" 
+            class="p-2 border rounded-md max-w-sm" 
+            style="width: 50%;" 
+            disabled 
+            autocomplete="off"
+          >
         </div>
-
-        <div class="w-1/2" id="horarios-container" style="display: none; position: relative; z-index: 1; margin-top: 20px;">
-          <label class="block text-sm font-medium">Horas Disponibles</label>
-          <div id="horas-lista" class="mt-1 space-y-1"></div>
+        <div class="w-full" id="horarios-container" style="display: none;">
+          <label class="block text-sm font-medium text-center mb-2">Horas Disponibles</label>
+          <!-- Reducimos el gap a gap-2 para menos espacio -->
+          <div id="horas-lista" class="grid grid-cols-3 gap-2 justify-items-center"></div>
         </div>
       </div>
-      <div class="flex justify-between mt-4">
+      <div class="flex justify-between mt-4 w-full">
         <button type="button" id="prev-2" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Atrás</button>
         <button type="button" id="next-2" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Siguiente</button>
       </div>
@@ -120,21 +128,20 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pikaday/1.8.0/pikaday.min.js"></script>
 
 <script>
-  // Función auxiliar para formatear una fecha a "YYYY-MM-DD"
+  // Función para formatear fecha a "YYYY-MM-DD"
   function formatDate(date) {
     const d = date.getDate();
-    const m = date.getMonth() + 1; // Los meses comienzan en 0
+    const m = date.getMonth() + 1;
     const y = date.getFullYear();
     return y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
   }
 
-  // Variables globales
   let currentStep = 1;
-  let picker; // Instancia de Pikaday
-  let availableDates = []; // Array con las fechas en las que el estilista trabaja (en formato "YYYY-MM-DD")
+  let picker;
+  let availableDates = []; // Fechas en las que el estilista trabaja
 
   function updateProgressBar(step) {
-    document.querySelectorAll('#progress-bar .step').forEach(function(el) {
+    document.querySelectorAll('#progress-bar .step').forEach(el => {
       el.classList.remove('active');
       if (parseInt(el.getAttribute('data-step')) === step) {
         el.classList.add('active');
@@ -143,31 +150,42 @@
   }
 
   function showStep(step) {
-    document.querySelectorAll('.form-step').forEach(function(el) {
+    document.querySelectorAll('.form-step').forEach(el => {
       el.style.display = 'none';
     });
     document.getElementById('step-' + step).style.display = 'block';
     updateProgressBar(step);
   }
 
-  // Función para cargar los horarios disponibles (se llama cuando se selecciona una fecha válida)
+  // Carga de horarios
   function loadHorarios() {
     const estilistaId = document.getElementById('estilista').value;
     const servicioId = document.getElementById('servicio').value;
     const fecha = document.getElementById('fecha').value;
     if (!fecha) return;
-    
+
     axios.get(`/api/v1/reservas/horarios/${estilistaId}/${fecha}/${servicioId}`)
       .then(response => {
         const horariosContainer = document.getElementById('horarios-container');
         const horasLista = document.getElementById('horas-lista');
         horasLista.innerHTML = '';
         response.data.forEach(hora => {
-          horasLista.innerHTML += `<label class="block">
-            <input type="radio" name="hora" value="${hora}"> ${hora}
-          </label>`;
+          horasLista.innerHTML += `
+            <label class="flex items-center justify-center p-2 border rounded-full cursor-pointer hover:bg-blue-100 transition-colors">
+              <input type="radio" name="hora" value="${hora}" class="hidden" />
+              <span class="text-sm font-medium">${hora}</span>
+            </label>
+          `;
         });
         horariosContainer.style.display = 'block';
+
+        // Evento para resaltar la hora seleccionada
+        document.querySelectorAll('input[name="hora"]').forEach(input => {
+          input.addEventListener('change', function() {
+            document.querySelectorAll('#horas-lista label').forEach(label => label.classList.remove('selected'));
+            this.parentElement.classList.add('selected');
+          });
+        });
       })
       .catch(error => {
         console.error('Error al obtener horarios:', error);
@@ -178,23 +196,17 @@
   document.getElementById('servicio').addEventListener('change', function() {
     let servicioId = this.value;
     let opcionSeleccionada = this.options[this.selectedIndex];
-    
-    // Actualizar detalles del servicio
     document.getElementById('detalle-nombre').innerText = opcionSeleccionada.getAttribute('data-nombre') || '';
     document.getElementById('detalle-descripcion').innerText = opcionSeleccionada.getAttribute('data-descripcion') || '';
     document.getElementById('detalle-precio').innerText = opcionSeleccionada.getAttribute('data-precio') ? 'Precio: $' + opcionSeleccionada.getAttribute('data-precio') : '';
     document.getElementById('detalle-duracion').innerText = opcionSeleccionada.getAttribute('data-duracion') ? 'Duración: ' + opcionSeleccionada.getAttribute('data-duracion') + ' minutos' : '';
 
-    // Reiniciar select de estilistas y deshabilitar el input de fecha
     let estilistaSelect = document.getElementById('estilista');
     estilistaSelect.innerHTML = '<option value="">Cargando estilistas...</option>';
     estilistaSelect.disabled = true;
     document.getElementById('fecha').disabled = true;
-
-    // Limpiar el área del perfil del estilista
     document.getElementById('perfil-estilista').innerHTML = '<p class="text-sm">Seleccione un estilista para ver su perfil.</p>';
 
-    // Obtener estilistas para el servicio seleccionado
     axios.get(`/api/v1/reservas/estilistas/${servicioId}`)
       .then(response => {
         estilistaSelect.innerHTML = '<option value="">Seleccione un estilista</option>';
@@ -214,7 +226,6 @@
     const estilistaId = this.value;
     document.getElementById('fecha').disabled = false;
 
-    // Cargar perfil del estilista
     axios.get(`/api/v1/perfiles/${estilistaId}`)
       .then(response => {
         const perfil = response.data.data;
@@ -230,25 +241,19 @@
         document.getElementById('perfil-estilista').innerHTML = '<p class="text-sm">No se pudo cargar el perfil.</p>';
       });
 
-    // Consultar los días disponibles del estilista mediante el nuevo endpoint
+    // Consultar los días disponibles del estilista (endpoint)
     axios.get(`/api/v1/horarios-estilista/dias-disponibles/${estilistaId}`)
       .then(response => {
-        // Se espera un array de fechas disponibles, ej: ["2025-03-31", "2025-04-01", ...]
         availableDates = response.data;
-        
-        // Si existe una instancia anterior de Pikaday, se destruye para reinicializar
         if (picker) {
           picker.destroy();
         }
-
-        // Inicializar Pikaday: habilitar sólo las fechas disponibles
         picker = new Pikaday({
           field: document.getElementById('fecha'),
           format: 'YYYY-MM-DD',
           minDate: new Date(),
           isInvalidDate: function(date) {
             let dateStr = formatDate(date);
-            // La fecha será inválida si NO está en availableDates
             return !availableDates.includes(dateStr);
           },
           onSelect: function(date) {
@@ -262,7 +267,7 @@
       });
   });
 
-  // Botones de navegación entre pasos
+  // Botones de navegación
   document.getElementById('next-1').addEventListener('click', function() {
     let servicio = document.getElementById('servicio').value;
     let estilista = document.getElementById('estilista').value;
@@ -303,7 +308,7 @@
 </script>
 
 <style>
-  /* Estilos para la barra de progreso */
+  /* Barra de progreso */
   #progress-bar {
     font-weight: bold;
   }
@@ -318,16 +323,34 @@
     background: #3490dc;
     color: white;
   }
-  /* Asegurar que el input de fecha se muestre por encima si es necesario */
+  /* Fecha con z-index */
   #fecha {
     position: relative;
     z-index: 1000;
   }
-  /* Estilos para los días deshabilitados en Pikaday */
+  /* Días deshabilitados en Pikaday */
   .pikaday .is-disabled {
     background-color: #f5f5f5 !important;
     color: #aaa !important;
     pointer-events: none;
+  }
+  /* Estilos para horas */
+  #horas-lista label {
+    padding: 0.4rem 0.8rem; /* Más pequeño que antes */
+    border: 1px solid #d1d5db;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    text-align: center;
+    width: max-content;
+  }
+  #horas-lista label:hover {
+    background-color: #e0f2fe;
+  }
+  #horas-lista label.selected {
+    background-color: #3490dc;
+    color: white;
+    border-color: #3490dc;
   }
 </style>
 @endsection

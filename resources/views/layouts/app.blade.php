@@ -1,60 +1,62 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-
     <title>{{ config('app.name', 'Laravel') }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-    <!-- Scripts -->
+    <!-- Scripts de Vite / Mix -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
 <body class="font-sans antialiased">
-    <div x-data="{ expanded: true }" class="min-h-screen bg-gray-100 flex flex-col">
-
-        <!-- Navegación principal -->
-        <div :class="expanded ? 'ml-64' : 'ml-16'" class="transition-all duration-300">
+    <!-- 
+      El x-data define la variable "expanded" para alternar el ancho del sidebar.
+      flex-col y min-h-screen permiten que el contenido abarque la pantalla completa
+      y el footer se ubique naturalmente al final.
+    -->
+    <div x-data="{ expanded: false }" class="flex flex-col min-h-screen bg-gray-100">
+        
+        <!-- NAV Superior -->
+        <header>
             @include('layouts.navigation')
-        </div>
-
+        </header>
+        
+        <!-- Contenedor central con flex creará 2 columnas (sidebar + contenido) -->
         <div class="flex flex-1">
+            <!-- Sidebar solo para admin o estilista -->
             @role('admin|estilista')
-            <!-- Sidebar -->
                 @include('layouts.sidebar')
-
             @endrole
-
+            
             <!-- Contenido principal -->
-            <div :class="expanded ? 'ml-64' : 'ml-16'" class="transition-all duration-300 flex-1">
-            <!-- Page Heading -->
+            <main class="flex-1">
+                <!-- Encabezado de página (opcional) -->
                 @isset($header)
-                    <header class="bg-white shadow">
+                    <div class="bg-white shadow">
                         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                             {{ $header }}
                         </div>
-                    </header>
+                    </div>
                 @endisset
 
-                <!-- Page Content -->
-                <main class="p-6">
+                <!-- Contenido de la página -->
+                <div class="p-6">
                     @yield('content')
-                </main>
-            </div>
+                </div>
+            </main>
         </div>
+
+        <!-- Footer -->
+        <footer class="bg-white shadow-sm">
+            @include('layouts.footer')
+        </footer>
     </div>
 
     @yield('scripts')
-    @include('layouts.footer')
-
 </body>
-
-
-
 </html>
