@@ -42,12 +42,12 @@
                                             <td class="py-2 px-4 border-b">{{ \Carbon\Carbon::parse($reserva->hora)->format('H:i') }}</td>
                                             <td class="py-2 px-4 border-b">{{ $reserva->servicio->nombre }}</td>
                                             @if($esEstilista)
-                                                <td class="py-2 px-4 border-b">{{ $reserva->user->name }}</td>
+                                                <td class="py-2 px-4 border-b">{{ $reserva->user->perfil->nombre }}</td>
                                             @elseif($esCliente)
-                                                <td class="py-2 px-4 border-b">{{ $reserva->estilista->user->name }}</td>
+                                                <td class="py-2 px-4 border-b">{{ $reserva->estilista->user->perfil->nombre }}</td>
                                             @elseif($esAdmin)
-                                                <td class="py-2 px-4 border-b">{{ $reserva->user->name }}</td>
-                                                <td class="py-2 px-4 border-b">{{ $reserva->estilista->user->name }}</td>
+                                                <td class="py-2 px-4 border-b">{{ $reserva->user->perfil->nombre }}</td>
+                                                <td class="py-2 px-4 border-b">{{ $reserva->estilista->user->perfil->nombre }}</td>
                                             @endif
                                             <td class="py-2 px-4 border-b">
                                                 <span class="px-2 py-1 rounded text-xs 

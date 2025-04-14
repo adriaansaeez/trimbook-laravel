@@ -27,6 +27,12 @@
                         {{ __('Dashboard') }}
                     </x-nav-link>
                     @endrole
+                    @role('admin')
+                    <x-nav-link :href="route('pagos.index')" :active="request()->routeIs('pagos.*')">
+                        {{ __('Pagos') }}
+                    </x-nav-link>
+                    @endrole
+                   
                     <!-- Nuevo botón: Mis Reservas -->
                     <x-nav-link href="/reservas">
                         {{ __('Mis Reservas') }}

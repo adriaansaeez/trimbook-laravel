@@ -17,6 +17,11 @@ class Pago extends Model
         'fecha_pago',
     ];
 
+    protected $casts = [
+        'fecha_pago' => 'datetime',
+        'importe' => 'decimal:2',
+    ];
+
     public function reserva()
     {
         return $this->belongsTo(Reserva::class);

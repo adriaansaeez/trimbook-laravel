@@ -20,6 +20,16 @@ Route::get('/', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/calendario-data', [HomeController::class, 'getCalendarioData'])->name('calendario.data');
+    
+    // Rutas de Pagos
+    Route::get('/pagos/home', [PagoController::class, 'home'])->name('pagos.home');
+    Route::get('/pagos', [PagoController::class, 'index'])->name('pagos.index');
+    Route::get('/pagos/{pago}', [PagoController::class, 'show'])->name('pagos.show');
+    Route::get('/pagos/{pago}/edit', [PagoController::class, 'edit'])->name('pagos.edit');
+    Route::post('/pagos', [PagoController::class, 'store'])->name('pagos.store');
+    Route::put('/pagos/{pago}', [PagoController::class, 'update'])->name('pagos.update');
+    Route::delete('/pagos/{pago}', [PagoController::class, 'destroy'])->name('pagos.destroy');
+    Route::get('/pagos/export/excel', [PagoController::class, 'exportarExcel'])->name('pagos.export.excel');
 });
 
 // Grupo de rutas protegidas solo para ADMIN
@@ -79,7 +89,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         // Asegúrate de que la ruta espera un parámetro llamado 'id'
         Route::delete('/dashboard/horarios-estilista/{id}', [EstilistaController::class, 'eliminarHorarioPivote'])->name('horarios_estilista.delete');
 
-
+        // PAGOS (CRUD)
+        Route::get('/pagos', [PagoController::class, 'index'])->name('pagos.index');
+        Route::get('/pagos/{pago}', [PagoController::class, 'show'])->name('pagos.show');
+        Route::get('/pagos/exportar-excel', [PagoController::class, 'exportarExcel'])->name('pagos.exportar-excel');
 
      
     });
@@ -125,7 +138,5 @@ Route::middleware(['auth', 'role:admin|estilista|cliente'])->group(function () {
      Route::get('/profile/edit', [PerfilController::class, 'edit'])->name('perfil.edit');
      Route::patch('/profile', [PerfilController::class, 'update'])->name('perfil.update');
 });
-
-Route::post('/pagos', [PagoController::class, 'store'])->name('pagos.store');
 
 require __DIR__.'/auth.php';
