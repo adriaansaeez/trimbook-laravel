@@ -98,19 +98,27 @@ Route::middleware(['auth', 'role:admin|estilista'])->prefix('dashboard')->group(
 Route::middleware(['auth', 'role:admin|estilista|cliente'])->group(function () {
     // CRUD de Reservas
     Route::get('/reservas', [ReservaController::class, 'index'])->name('reservas.index'); // Listar reservas
-    Route::get('/reservas/create', [ReservaController::class, 'create'])->name('reservas.create'); // Formulario para crear una reserva
-    Route::post('/reservas', [ReservaController::class, 'store'])->name('reservas.store'); // Guardar una reserva
-    Route::delete('/reservas/{reserva}', [ReservaController::class, 'destroy'])->name('reservas.destroy'); // 🛑 Nueva ruta
-
-    // Rutas para carga de datos dinámicos vía AJAX con Axios
-    Route::get('/reservas/estilistas/{servicio_id}', [ReservaController::class, 'getEstilistas']);
-    Route::get('/reservas/horarios/{estilista_id}/{fecha}/{servicio_id}', [ReservaController::class, 'getHorarios']);
-
-    //Ruta Cancelar Reserva
-    Route::delete('/reservas/{reserva}', [ReservaController::class, 'cancelar'])->name('reservas.cancelar');
+    Route::get('/reservas/create', [ReservaController::class, 'create'])->name('reservas.create'); // Formulario de creación
+    Route::post('/reservas', [ReservaController::class, 'store'])->name('reservas.store'); // Guardar reserva
+    Route::get('/reservas/{reserva}', [ReservaController::class, 'show'])->name('reservas.show'); // Ver detalles
+    Route::get('/reservas/{reserva}/edit', [ReservaController::class, 'edit'])->name('reservas.edit'); // Formulario de edición
+    Route::put('/reservas/{reserva}', [ReservaController::class, 'update'])->name('reservas.update'); // Actualizar reserva
+    Route::delete('/reservas/{reserva}', [ReservaController::class, 'destroy'])->name('reservas.destroy'); // Eliminar reserva
     
-    //Ruta Confirmar Reserva
+    // Rutas para gestionar estados de reservas
+    Route::post('/reservas/{reserva}/cancelar', [ReservaController::class, 'cancelar'])->name('reservas.cancelar');
     Route::post('/reservas/{reserva}/confirmar', [ReservaController::class, 'confirmar'])->name('reservas.confirmar');
+    Route::post('/reservas/{reserva}/completar', [ReservaController::class, 'completar'])->name('reservas.completar');
+    
+    // Rutas para gestionar pagos
+    Route::post('/reservas/{reserva}/pago', [ReservaController::class, 'registrarPago'])->name('reservas.pago');
+    
+    // Rutas para exportar reservas
+    Route::get('/reservas/{reserva}/exportar-pdf', [ReservaController::class, 'exportarPDF'])->name('reservas.exportar-pdf');
+    Route::get('/reservas/exportar-excel', [ReservaController::class, 'exportarExcel'])->name('reservas.exportar-excel');
+    
+    // Ruta para obtener estilistas por servicio
+    Route::get('/reservas/estilistas/{servicio}', [ReservaController::class, 'getEstilistas'])->name('reservas.estilistas');
 
      // Perfil de usuario (disponible para todos los usuarios autenticados)
      Route::get('/profile', [PerfilController::class, 'index'])->name('perfil.index');

@@ -16,12 +16,19 @@
                 <!-- Sustitución de sm:ms-10 -> sm:ml-10 y eliminación de márgenes negativos -->
                 <div class="hidden space-x-8 sm:ml-10 sm:flex">
                     <!-- Home -->
+                    @role('estilista|cliente')
                     <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
                         {{ __('Home') }}
                     </x-nav-link>
-
+                    @endrole
+                    
+                    @role('admin')
+                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                        {{ __('Dashboard') }}
+                    </x-nav-link>
+                    @endrole
                     <!-- Nuevo botón: Mis Reservas -->
-                    <x-nav-link href="#">
+                    <x-nav-link href="/reservas">
                         {{ __('Mis Reservas') }}
                     </x-nav-link>
 

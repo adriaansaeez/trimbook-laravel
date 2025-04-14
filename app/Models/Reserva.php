@@ -28,4 +28,22 @@ class Reserva extends Model
     {
         return $this->belongsTo(Estilista::class);
     }
+    
+    // Relación con el pago
+    public function pago()
+    {
+        return $this->hasOne(Pago::class);
+    }
+    
+    // Accesor para obtener el precio del servicio
+    public function getPrecioAttribute()
+    {
+        return $this->servicio->precio;
+    }
+    
+    // Accesor para verificar si la reserva está pagada
+    public function getPagadaAttribute()
+    {
+        return $this->pago()->exists();
+    }
 }
