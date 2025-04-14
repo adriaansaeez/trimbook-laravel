@@ -8,6 +8,7 @@ use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PagoController;
 
 
 // Ruta principal accesible para todos (sin autenticación)
@@ -82,10 +83,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
      
     });
-    // Perfil de usuario (disponible para todos los usuarios autenticados)
-    Route::get('/profile', [PerfilController::class, 'index'])->name('perfil.index');
-    Route::get('/profile/edit', [PerfilController::class, 'edit'])->name('perfil.edit');
-    Route::patch('/profile', [PerfilController::class, 'update'])->name('perfil.update');
+   
     
 });
 
@@ -113,9 +111,13 @@ Route::middleware(['auth', 'role:admin|estilista|cliente'])->group(function () {
     
     //Ruta Confirmar Reserva
     Route::post('/reservas/{reserva}/confirmar', [ReservaController::class, 'confirmar'])->name('reservas.confirmar');
+
+     // Perfil de usuario (disponible para todos los usuarios autenticados)
+     Route::get('/profile', [PerfilController::class, 'index'])->name('perfil.index');
+     Route::get('/profile/edit', [PerfilController::class, 'edit'])->name('perfil.edit');
+     Route::patch('/profile', [PerfilController::class, 'update'])->name('perfil.update');
 });
 
-
-
+Route::post('/pagos', [PagoController::class, 'store'])->name('pagos.store');
 
 require __DIR__.'/auth.php';

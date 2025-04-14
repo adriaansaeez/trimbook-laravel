@@ -162,13 +162,26 @@
     const estilistaId = document.getElementById('estilista').value;
     const servicioId = document.getElementById('servicio').value;
     const fecha = document.getElementById('fecha').value;
-    if (!fecha) return;
+    
+    if (!estilistaId || !servicioId || !fecha) {
+      console.error('Faltan datos para cargar horarios:', { estilistaId, servicioId, fecha });
+      return;
+    }
+
+    const horariosContainer = document.getElementById('horarios-container');
+    const horasLista = document.getElementById('horas-lista');
+    horasLista.innerHTML = '<p class="text-center text-gray-500">Cargando horarios disponibles...</p>';
+    horariosContainer.style.display = 'block';
 
     axios.get(`/api/v1/reservas/horarios/${estilistaId}/${fecha}/${servicioId}`)
       .then(response => {
-        const horariosContainer = document.getElementById('horarios-container');
-        const horasLista = document.getElementById('horas-lista');
         horasLista.innerHTML = '';
+        
+        if (!response.data || response.data.length === 0) {
+          horasLista.innerHTML = '<p class="text-center text-red-500">No hay horarios disponibles para esta fecha.</p>';
+          return;
+        }
+        
         response.data.forEach(hora => {
           horasLista.innerHTML += `
             <label class="flex items-center justify-center p-2 border rounded-full cursor-pointer hover:bg-blue-100 transition-colors">
@@ -177,7 +190,6 @@
             </label>
           `;
         });
-        horariosContainer.style.display = 'block';
 
         // Evento para resaltar la hora seleccionada
         document.querySelectorAll('input[name="hora"]').forEach(input => {
@@ -189,6 +201,7 @@
       })
       .catch(error => {
         console.error('Error al obtener horarios:', error);
+        horasLista.innerHTML = '<p class="text-center text-red-500">Error al cargar los horarios. Por favor, intente nuevamente.</p>';
       });
   }
 

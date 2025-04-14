@@ -14,7 +14,7 @@ class ReservaController extends Controller
 {
     public function index()
     {
-        $reservas = Reserva::where('user_id', auth()->id())->get();
+        $reservas = Reserva::all();
         return view('reservas.index', compact('reservas'));
     }
 

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('estilista_id')->constrained('estilistas')->onDelete('cascade');
             $table->date('fecha');
             $table->time('hora');
-            $table->enum('estado', ['PENDIENTE', 'CONFIRMADA', 'CANCELADA'])->default('PENDIENTE');
+            $table->enum('estado', ['PENDIENTE', 'CONFIRMADA', 'CANCELADA', 'COMPLETADA'])->default('PENDIENTE');
             $table->timestamps();
         });
     }

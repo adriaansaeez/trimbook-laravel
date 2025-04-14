@@ -125,41 +125,74 @@ class ReservaController extends Controller
      */
     public function getHorarios($estilista_id, $fecha, $servicio_id)
     {
-        $dia = strtoupper(Carbon::parse($fecha)->locale('es')->dayName);
-        $servicio = Servicio::findOrFail($servicio_id);
-        $dur = $servicio->duracion;
-        $horarios = collect();
+        try {
+            $dia = strtoupper(Carbon::parse($fecha)->locale('es')->dayName);
+            $servicio = Servicio::findOrFail($servicio_id);
+            $dur = $servicio->duracion;
+            $horarios = collect();
 
-        // Itera todos los horarios asignados al estilista
-        foreach (Estilista::findOrFail($estilista_id)->horarios as $h) {
-            foreach ($h->horario as $bloque) {
-                if (strtoupper($bloque['dia']) !== $dia) {
+            // Obtener el estilista
+            $estilista = Estilista::findOrFail($estilista_id);
+            
+            // Verificar si el estilista tiene horarios asignados
+            if (!$estilista->horarios || $estilista->horarios->isEmpty()) {
+                \Log::info("El estilista {$estilista_id} no tiene horarios asignados");
+                return response()->json([]);
+            }
+
+            \Log::info("Procesando horarios para estilista {$estilista_id}, día {$dia}, fecha {$fecha}");
+            
+            // Itera todos los horarios asignados al estilista
+            foreach ($estilista->horarios as $h) {
+                $horario = is_array($h->horario) ? $h->horario : json_decode($h->horario, true);
+                if (!is_array($horario)) {
+                    \Log::info("Horario no es un array válido: " . json_encode($h->horario));
                     continue;
                 }
-                // Itera cada intervalo de tiempo y genera slots según duración
-                foreach ($bloque['intervalos'] as $int) {
-                    $start = Carbon::createFromFormat('H:i', $int['start']);
-                    $end   = Carbon::createFromFormat('H:i', $int['end']);
-
-                    while ($start->lt($end)) {
-                        $slot = $start->format('H:i');
-
-                        // Añade slot si no existe reserva en esa fecha/hora
-                        if (! Reserva::where('estilista_id', $estilista_id)
-                            ->where('fecha', $fecha)
-                            ->where('hora', $slot)
-                            ->exists()
-                        ) {
-                            $horarios->push($slot);
+            
+                foreach ($horario as $bloque) {
+                    if (!is_array($bloque) || !isset($bloque['dia']) || !isset($bloque['intervalos'])) {
+                        \Log::info("Bloque de horario inválido: " . json_encode($bloque));
+                        continue;
+                    }
+            
+                    if (strtoupper($bloque['dia']) !== $dia) {
+                        continue;
+                    }
+            
+                    foreach ($bloque['intervalos'] as $int) {
+                        if (!isset($int['start']) || !isset($int['end'])) {
+                            \Log::info("Intervalo inválido: " . json_encode($int));
+                            continue;
                         }
-
-                        $start->addMinutes($dur);
+                        
+                        $start = Carbon::createFromFormat('H:i', $int['start']);
+                        $end = Carbon::createFromFormat('H:i', $int['end']);
+            
+                        while ($start->lt($end)) {
+                            $slot = $start->format('H:i');
+            
+                            if (!Reserva::where('estilista_id', $estilista_id)
+                                ->where('fecha', $fecha)
+                                ->where('hora', $slot)
+                                ->exists()) {
+                                $horarios->push($slot);
+                            }
+            
+                            $start->addMinutes($dur);
+                        }
                     }
                 }
             }
+            
+            $resultado = $horarios->unique()->values();
+            \Log::info("Horarios disponibles encontrados: " . $resultado->count());
+            
+            return response()->json($resultado);
+        } catch (\Exception $e) {
+            \Log::error("Error en getHorarios: " . $e->getMessage());
+            return response()->json(['error' => 'Error al procesar los horarios'], 500);
         }
-
-        return response()->json($horarios->unique()->values());
     }
     /**
      * Retorna las fechas disponibles (próximos 30 días) en que el estilista trabaja,
@@ -171,52 +204,52 @@ class ReservaController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function getDiasDisponibles($estilista_id)
-{
-    $availableDates = [];
-    $today = Carbon::today();
-    $endDate = Carbon::today()->addDays(30);
+    {
+        $availableDates = [];
+        $today = Carbon::today();
+        $endDate = Carbon::today()->addDays(30);
 
-    // Obtener todos los registros activos para el estilista
-    $schedules = HorariosEstilista::with('horario') // asumiendo relación "horario" en el modelo
-        ->where('estilista_id', $estilista_id)
-        ->whereDate('fecha_inicio', '<=', $today->format('Y-m-d'))
-        ->whereDate('fecha_fin', '>=', $today->format('Y-m-d'))
-        ->get();
+        // Obtener todos los registros activos para el estilista
+        $schedules = HorariosEstilista::with('horario') // asumiendo relación "horario" en el modelo
+            ->where('estilista_id', $estilista_id)
+            ->whereDate('fecha_inicio', '<=', $today->format('Y-m-d'))
+            ->whereDate('fecha_fin', '>=', $today->format('Y-m-d'))
+            ->get();
 
-    // Si no hay horarios activos, devolver un array vacío
-    if ($schedules->isEmpty()) {
-        return response()->json([]);
-    }
+        // Si no hay horarios activos, devolver un array vacío
+        if ($schedules->isEmpty()) {
+            return response()->json([]);
+        }
 
-    // Recorrer cada día en el rango
-    for ($date = $today->copy(); $date->lte($endDate); $date->addDay()) {
-        // Obtenemos el nombre del día en mayúsculas (ej: "LUNES")
-        $dayName = strtoupper($date->locale('es')->dayName);
-        $works = false;
+        // Recorrer cada día en el rango
+        for ($date = $today->copy(); $date->lte($endDate); $date->addDay()) {
+            // Obtenemos el nombre del día en mayúsculas (ej: "LUNES")
+            $dayName = strtoupper($date->locale('es')->dayName);
+            $works = false;
 
-        // Revisar cada registro de horarios para ver si el día actual está permitido
-        foreach ($schedules as $schedule) {
-            $horario = is_array($schedule->horario) ? $schedule->horario : json_decode($schedule->horario, true);
-            if (!is_array($horario)) {
-                continue;
-            }
-            foreach ($horario as $dayData) {
-                if (!is_array($dayData) || !isset($dayData['dia'])) {
+            // Revisar cada registro de horarios para ver si el día actual está permitido
+            foreach ($schedules as $schedule) {
+                $horario = is_array($schedule->horario) ? $schedule->horario : json_decode($schedule->horario, true);
+                if (!is_array($horario)) {
                     continue;
                 }
-                if (strtoupper($dayData['dia']) === $dayName && isset($dayData['intervalos']) && count($dayData['intervalos']) > 0) {
-                    $works = true;
-                    break 2;
+                foreach ($horario as $dayData) {
+                    if (!is_array($dayData) || !isset($dayData['dia'])) {
+                        continue;
+                    }
+                    if (strtoupper($dayData['dia']) === $dayName && isset($dayData['intervalos']) && count($dayData['intervalos']) > 0) {
+                        $works = true;
+                        break 2;
+                    }
                 }
+            }
+
+            if ($works) {
+                $availableDates[] = $date->format('Y-m-d');
             }
         }
 
-        if ($works) {
-            $availableDates[] = $date->format('Y-m-d');
-        }
+        return response()->json($availableDates);
     }
-
-    return response()->json($availableDates);
-}
 
 }

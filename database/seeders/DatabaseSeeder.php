@@ -29,7 +29,6 @@ class DatabaseSeeder extends Seeder
             $admin->assignRole($adminRole);
         }
         
-
         // Crear el rol CLIENTE si no existe
         $clienteRole = Role::firstOrCreate(['name' => 'cliente']);
 
@@ -45,11 +44,10 @@ class DatabaseSeeder extends Seeder
             $cliente->assignRole($clienteRole);
         }
 
-
-        // Crear el rol CLIENTE si no existe
+        // Crear el rol ESTILISTA si no existe
         $estilistaRole = Role::firstOrCreate(['name' => 'estilista']);
 
-        // Verificar si el usuario cliente ya existe antes de crearlo
+        // Verificar si el usuario estilista ya existe antes de crearlo
         if (!User::where('email', 'super@estilista.com')->exists()) {
             $estilista = User::factory()->create([
                 'username' => 'Estilista User',
@@ -57,8 +55,18 @@ class DatabaseSeeder extends Seeder
                 'password' => Hash::make('password'),
             ]);
             
-            // Asignar el rol CLIENTE al usuario cliente
+            // Asignar el rol ESTILISTA al usuario estilista
             $estilista->assignRole($estilistaRole);
         }
+
+        // Ejecutar los seeders en orden
+        $this->call([
+            PerfilSeeder::class,
+            ServicioSeeder::class,
+            EstilistaSeeder::class,
+            HorarioSeeder::class,
+            ReservaSeeder::class,
+            PagoSeeder::class,
+        ]);
     }
 }

@@ -16,7 +16,6 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->unique(); // Relación 1:1 con users
             $table->string('nombre');
             $table->timestamps();
-
             // Clave foránea
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
