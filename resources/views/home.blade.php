@@ -90,7 +90,7 @@
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="grid grid-cols-3 gap-6">
+            <div class="grid gap-6">
                 <div class="col-span-2">
                     <x-calendario-semanal 
                         :estilistaId="$estilistaId" 
@@ -101,60 +101,6 @@
                         :esCliente="$esCliente"
                         :esAdmin="$esAdmin"
                     />
-                </div>
-                <div class="col-span-1">
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg h-full">
-                        <div class="p-6 text-gray-900">
-                            <div id="detalles-reserva" class="hidden">
-                                <h3 class="text-lg font-semibold mb-4">Detalles de la Reserva</h3>
-                                <div class="space-y-4">
-                                    <div>
-                                        <p class="text-sm text-gray-600">Cliente:</p>
-                                        <p class="font-medium" id="cliente-nombre"></p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-600">Servicio:</p>
-                                        <p class="font-medium" id="servicio-nombre"></p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-600">Fecha y Hora:</p>
-                                        <p class="font-medium" id="fecha-hora"></p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-600">Estado:</p>
-                                        <p class="font-medium" id="estado-reserva"></p>
-                                    </div>
-                                    
-                                    <div id="formulario-pago" class="hidden">
-                                        <h4 class="text-md font-semibold mb-3">Procesar Pago</h4>
-                                        <form id="pago-form" class="space-y-4">
-                                            @csrf
-                                            <input type="hidden" id="reserva-id" name="reserva_id">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
-                                                <select name="metodo_pago" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                                    <option value="EFECTIVO">Efectivo</option>
-                                                    <option value="TARJETA">Tarjeta</option>
-                                                    <option value="BIZUM">Bizum</option>
-                                                    <option value="TRANSFERENCIA">Transferencia</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700">Importe</label>
-                                                <input type="number" step="0.01" name="importe" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                            </div>
-                                            <button type="submit" class="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
-                                                Procesar Pago
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="sin-seleccion" class="text-center text-gray-500">
-                                <p>Selecciona una reserva para ver los detalles</p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
