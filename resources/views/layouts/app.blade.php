@@ -29,7 +29,7 @@
         <!-- Contenedor central con flex creará 2 columnas (sidebar + contenido) -->
         <div class="flex flex-1">
             <!-- Sidebar solo para admin o estilista -->
-            @role('admin|estilista')
+            @role('admin')
                 @include('layouts.sidebar')
             @endrole
             

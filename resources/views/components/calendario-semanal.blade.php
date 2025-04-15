@@ -99,8 +99,10 @@
                                             'cliente' => $nombreCliente,
                                             'estilista' => $nombreEstilista,
                                             'servicio' => $reserva->servicio->nombre ?? 'Servicio',
-                                            'fecha' => $reserva->fecha,
-                                            'hora' => $reserva->hora,
+                                            'fecha_raw' => $reserva->fecha,
+                                            'hora_raw' => $reserva->hora,
+                                            'fecha_formateada' => Carbon\Carbon::parse($reserva->fecha)->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY'),
+                                            'hora_formateada' => Carbon\Carbon::parse($reserva->hora)->format('H:i'),
                                             'estado' => $reserva->estado,
                                             'precio' => $reserva->servicio->precio ?? 0
                                         ]), ENT_QUOTES, 'UTF-8') !!}"
@@ -358,7 +360,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         document.getElementById('cliente-nombre').textContent = reserva.cliente;
         document.getElementById('servicio-nombre').textContent = reserva.servicio;
-        document.getElementById('fecha-hora').textContent = `${reserva.fecha} ${reserva.hora}`;
+        
+        // Usar directamente los valores formateados desde el backend
+        document.getElementById('fecha-hora').textContent = 
+            `${reserva.fecha_formateada} a las ${reserva.hora_formateada}`;
+        
         document.getElementById('estado-reserva').textContent = reserva.estado;
 
         if ((['CONFIRMADA', 'PENDIENTE'].includes(reserva.estado)) && (esAdmin || esEstilista)) {
