@@ -1,4 +1,4 @@
-<aside x-data="{ openDropdown: '', expanded: true }"
+<aside x-data="{ openDropdown: '', expanded: false }"
        class="bg-white transition-all duration-300 overflow-y-auto flex-none relative"
        :class="expanded ? 'w-64' : 'w-16'">
 

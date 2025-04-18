@@ -13,13 +13,13 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="font-sans antialiased">
+<body class="font-sans antialiased overflow-x-hidden">
     <!-- 
       El x-data define la variable "expanded" para alternar el ancho del sidebar.
       flex-col y min-h-screen permiten que el contenido abarque la pantalla completa
       y el footer se ubique naturalmente al final.
     -->
-    <div x-data="{ expanded: false }" class="flex flex-col min-h-screen bg-gray-100">
+    <div x-data="{ expanded: false }" class="flex flex-col min-h-screen bg-gray-100 overflow-x-hidden">
         
         <!-- NAV Superior -->
         <header>
@@ -34,7 +34,7 @@
             @endrole
             
             <!-- Contenido principal -->
-            <main class="flex-1">
+            <main class="flex-1 overflow-x-hidden">
                 <!-- Encabezado de página (opcional) -->
                 @isset($header)
                     <div class="bg-white shadow">

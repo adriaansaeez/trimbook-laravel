@@ -22,7 +22,15 @@ class HomeController extends Controller
             ? Carbon::parse($request->semana) 
             : Carbon::now();
             
-        $inicioSemana = $fechaBase->copy()->startOfWeek();
+        // Calcular el inicio de la semana (lunes)
+        // Si la fecha proporcionada es un lunes, usarla directamente
+        if ($fechaBase->dayOfWeek == Carbon::MONDAY) {
+            $inicioSemana = $fechaBase->copy();
+        } else {
+            // Si no es lunes, calcular el lunes de la semana actual
+            $inicioSemana = $fechaBase->copy()->startOfWeek(Carbon::MONDAY);
+        }
+        
         $finSemana = $inicioSemana->copy()->endOfWeek();
         
         // Obtener el ID del estilista del usuario logueado
@@ -90,7 +98,19 @@ class HomeController extends Controller
             ? Carbon::parse($request->fecha) 
             : Carbon::now();
             
-        $inicioSemana = $fechaBase->copy()->startOfWeek();
+        // Obtener el desplazamiento de semanas (si existe)
+        $desplazamiento = $request->has('desplazamiento') 
+            ? (int)$request->desplazamiento 
+            : 0;
+            
+        // Calcular el inicio de la semana (lunes)
+        $inicioSemana = $fechaBase->copy()->startOfWeek(Carbon::MONDAY);
+        
+        // Aplicar el desplazamiento de semanas
+        if ($desplazamiento != 0) {
+            $inicioSemana->addWeeks($desplazamiento);
+        }
+        
         $finSemana = $inicioSemana->copy()->endOfWeek();
         
         // Obtener el ID del estilista del usuario logueado

@@ -122,8 +122,8 @@ class PagoController extends Controller
                 ], 400);
             }
 
-            // Verificar si está en estado válido
-            if (!in_array($reserva->estado, ['PENDIENTE', 'CONFIRMADA'])) {
+            // Verificar si está en estado válido (ahora solo CONFIRMADA)
+            if ($reserva->estado !== 'CONFIRMADA') {
                 return response()->json([
                     'success' => false,
                     'message' => 'El estado de la reserva no permite procesar el pago'

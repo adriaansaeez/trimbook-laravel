@@ -227,7 +227,7 @@ class ReservaController extends Controller
         return redirect()->back()->with('success', 'Reserva confirmada con éxito');
     }
     
-    public function completar(Reserva $reserva)
+    public function completar(Request $request, Reserva $reserva)
     {
         $user = auth()->user();
         
@@ -235,12 +235,36 @@ class ReservaController extends Controller
         if (!$user->estilista || $user->estilista->id !== $reserva->estilista_id) {
             return redirect()->back()->with('error', 'No autorizado para completar esta reserva');
         }
-        
-        // Actualizar el estado de la reserva
-        $reserva->estado = 'COMPLETADA';
-        $reserva->save();
-        
-        return redirect()->back()->with('success', 'Reserva completada con éxito');
+
+        // Validar los datos del pago
+        $request->validate([
+            'metodo_pago' => 'required|in:EFECTIVO,TARJETA,BIZUM,TRANSFERENCIA',
+            'importe' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Crear el pago
+            Pago::create([
+                'reserva_id' => $reserva->id,
+                'estilista_id' => $user->estilista->id,
+                'metodo_pago' => $request->metodo_pago,
+                'importe' => $request->importe,
+                'fecha_pago' => now(),
+            ]);
+            
+            // Actualizar el estado de la reserva
+            $reserva->estado = 'COMPLETADA';
+            $reserva->save();
+
+            DB::commit();
+            
+            return redirect()->back()->with('success', 'Reserva completada y pago registrado con éxito');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->back()->with('error', 'Error al procesar la reserva y el pago: ' . $e->getMessage());
+        }
     }
     
     public function registrarPago(Request $request, Reserva $reserva)

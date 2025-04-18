@@ -11,6 +11,11 @@ class Reserva extends Model
 
     protected $fillable = ['user_id', 'servicio_id', 'estilista_id', 'fecha', 'hora', 'estado'];
 
+    // Establecer el estado por defecto como CONFIRMADA
+    protected $attributes = [
+        'estado' => 'CONFIRMADA'
+    ];
+
     // Relación con el usuario
     public function user()
     {
