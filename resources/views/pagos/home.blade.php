@@ -9,6 +9,92 @@
             <div class="p-6 bg-white border-b border-gray-200">
                 <h2 class="text-2xl font-semibold mb-6">Dashboard de Pagos</h2>
 
+                <!-- Estadísticas de Hoy -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold mb-4">Hoy</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <!-- Total del Día -->
+                        <div class="bg-purple-600 rounded-lg shadow-lg p-6">
+                            <div class="text-white">
+                                <p class="text-sm font-medium uppercase">Total del Día</p>
+                                <p class="text-3xl font-bold mt-2">€{{ number_format($estadisticasHoy['total_dia'], 2) }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Cantidad de Pagos -->
+                        <div class="bg-pink-600 rounded-lg shadow-lg p-6">
+                            <div class="text-white">
+                                <p class="text-sm font-medium uppercase">Cantidad de Pagos</p>
+                                <p class="text-3xl font-bold mt-2">{{ $estadisticasHoy['cantidad_pagos'] }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Promedio por Pago -->
+                        <div class="bg-orange-600 rounded-lg shadow-lg p-6">
+                            <div class="text-white">
+                                <p class="text-sm font-medium uppercase">Promedio por Pago</p>
+                                <p class="text-3xl font-bold mt-2">€{{ number_format($estadisticasHoy['promedio_pago'], 2) }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Último Pago -->
+                        <div class="bg-teal-600 rounded-lg shadow-lg p-6">
+                            <div class="text-white">
+                                <p class="text-sm font-medium uppercase">Último Pago</p>
+                                <p class="text-3xl font-bold mt-2">{{ $estadisticasHoy['hora_ultimo_pago'] ? \Carbon\Carbon::parse($estadisticasHoy['hora_ultimo_pago'])->format('H:i') : '--:--' }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Pagos de Hoy -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hora</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Servicio</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estilista</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Método</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Importe</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @forelse($pagosDiaActual as $pago)
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ \Carbon\Carbon::parse($pago->fecha_pago)->format('H:i') }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ $pago->reserva->user->name }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ $pago->reserva->servicio->nombre }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ $pago->estilista->nombre }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ $pago->metodo_pago }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        €{{ number_format($pago->importe, 2) }}
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        No hay pagos registrados hoy
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-semibold mb-4">Resumen del Último Mes</h3>
+
                 <!-- Estadísticas Generales -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <!-- Total del Mes -->

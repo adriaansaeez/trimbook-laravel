@@ -221,6 +221,20 @@ class PagoController extends Controller
         // Obtener la fecha de hace un mes
         $fechaInicio = Carbon::now()->subMonth();
         
+        // Obtener la fecha de hoy
+        $hoy = Carbon::today();
+        
+        // Pagos de hoy
+        $pagosDiaActual = Pago::where('fecha_pago', '>=', $hoy)
+            ->get();
+            
+        $estadisticasHoy = [
+            'total_dia' => $pagosDiaActual->sum('importe'),
+            'cantidad_pagos' => $pagosDiaActual->count(),
+            'promedio_pago' => $pagosDiaActual->avg('importe'),
+            'hora_ultimo_pago' => $pagosDiaActual->max('fecha_pago'),
+        ];
+
         // Gráfico 1: Pagos por día del último mes
         $pagosPorDia = Pago::select(
             DB::raw('DATE(fecha_pago) as fecha'),
@@ -283,7 +297,9 @@ class PagoController extends Controller
             'pagosPorMetodo',
             'pagosPorEstilista',
             'pagosPorServicio',
-            'estadisticas'
+            'estadisticas',
+            'estadisticasHoy',
+            'pagosDiaActual'
         ));
     }
 
