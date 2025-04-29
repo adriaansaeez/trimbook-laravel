@@ -55,8 +55,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/estilistas/create', [EstilistaController::class, 'create'])->name('estilistas.create');
         Route::post('/estilistas', [EstilistaController::class, 'store'])->name('estilistas.store');
         Route::get('/estilistas/{estilista}/edit', [EstilistaController::class, 'edit'])->name('estilistas.edit');
-        Route::put('/estilistas/{estilista}', [EstilistaController::class, 'update'])->name('estilistas.update'); // <--- Aquí
+        Route::put('/estilistas/{estilista}', [EstilistaController::class, 'update'])->name('estilistas.update');
         Route::delete('/estilistas/{estilista}', [EstilistaController::class, 'destroy'])->name('estilistas.destroy');
+        Route::post('/estilistas/importar', [EstilistaController::class, 'importarEstilista'])->name('estilistas.importar');
 
         Route::get('estilistas/{estilista}/horarios', [EstilistaController::class, 'editHorarios'])->name('estilistas.horarios.edit');
         Route::put('estilistas/{estilista}/horarios', [EstilistaController::class, 'asignarHorario'])->name('estilistas.horarios.update');

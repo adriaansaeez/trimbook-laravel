@@ -17,7 +17,10 @@ class EstilistaController extends Controller
     {
         try {
             $estilistas = Estilista::with('user')->get();
-            return view('estilistas.index', compact('estilistas'));
+            $usuariosEstilistas = User::role('estilista')
+                                    ->whereDoesntHave('estilista')
+                                    ->get();
+            return view('estilistas.index', compact('estilistas', 'usuariosEstilistas'));
         } catch (\Exception $e) {
             Log::error('Error al listar estilistas: ' . $e->getMessage());
             return redirect()->back()->withErrors('No se pudo cargar la lista de estilistas.');
@@ -27,8 +30,13 @@ class EstilistaController extends Controller
     public function create()
     {
         try {
-            $usuarios = User::doesntHave('estilista')->get();
-            return view('estilistas.create', compact('usuarios'));
+            // Obtener usuarios que tienen el rol de estilista pero no están en la tabla estilistas
+            $usuarios = User::role('estilista')
+                          ->whereDoesntHave('estilista')
+                          ->get();
+            $servicios = Servicio::all();
+                          
+            return view('estilistas.create', compact('usuarios', 'servicios'));
         } catch (\Exception $e) {
             Log::error('Error al cargar el formulario de creación: ' . $e->getMessage());
             return redirect()->back()->withErrors('No se pudo cargar el formulario.');
@@ -41,9 +49,17 @@ class EstilistaController extends Controller
             $request->validate([
                 'user_id' => 'required|exists:users,id|unique:estilistas,user_id',
                 'nombre' => 'required|string|max:255',
+                'servicios' => 'array',
+                'servicios.*' => 'exists:servicios,id',
             ]);
 
             $estilista = Estilista::create($request->all());
+            
+            // Asignar servicios si se seleccionaron
+            if ($request->has('servicios')) {
+                $estilista->servicios()->sync($request->servicios);
+            }
+
             $user = User::findOrFail($request->user_id);
             $user->assignRole('estilista');
 
@@ -58,7 +74,9 @@ class EstilistaController extends Controller
     {
         try {
             $horarios = Horario::all();
-            return view('estilistas.edit', compact('estilista', 'horarios'));
+            $servicios = Servicio::all();
+            $estilista->load('servicios'); // Cargar los servicios actuales del estilista
+            return view('estilistas.edit', compact('estilista', 'horarios', 'servicios'));
         } catch (\Exception $e) {
             Log::error('Error al cargar el formulario de edición: ' . $e->getMessage());
             return redirect()->back()->withErrors('No se pudo cargar la edición del estilista.');
@@ -71,10 +89,21 @@ class EstilistaController extends Controller
             $request->validate([
                 'nombre' => 'required|string|max:255',
                 'horarios' => 'array',
+                'servicios' => 'array',
+                'servicios.*' => 'exists:servicios,id',
             ]);
 
             $estilista->update(['nombre' => $request->nombre]);
-            $estilista->horarios()->sync($request->horarios ?? []);
+            
+            // Sincronizar horarios
+            if ($request->has('horarios')) {
+                $estilista->horarios()->sync($request->horarios);
+            }
+            
+            // Sincronizar servicios
+            if ($request->has('servicios')) {
+                $estilista->servicios()->sync($request->servicios);
+            }
 
             return redirect()->route('estilistas.index')->with('success', 'Estilista actualizado correctamente.');
         } catch (\Exception $e) {
@@ -208,6 +237,21 @@ class EstilistaController extends Controller
         return redirect()->back()->with('success', 'Servicios asignados correctamente.');
     }
 
+    public function importarEstilista(Request $request)
+    {
+        try {
+            $request->validate([
+                'user_id' => 'required|exists:users,id|unique:estilistas,user_id',
+                'nombre' => 'required|string|max:255',
+            ]);
 
+            $estilista = Estilista::create($request->all());
+            
+            return redirect()->route('estilistas.index')->with('success', 'Estilista importado correctamente.');
+        } catch (\Exception $e) {
+            Log::error('Error al importar estilista: ' . $e->getMessage());
+            return redirect()->back()->withErrors('Error al importar el estilista.');
+        }
+    }
 
 }
