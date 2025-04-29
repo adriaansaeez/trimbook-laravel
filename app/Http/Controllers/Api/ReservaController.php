@@ -252,4 +252,57 @@ class ReservaController extends Controller
         return response()->json($availableDates);
     }
 
+    /**
+     * Cambia el estado de una reserva.
+     *
+     * PUT /api/v1/reservas/{reserva}/estado
+     *
+     * @param  Request  $request
+     * @param  Reserva  $reserva
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function cambiarEstado(Request $request, Reserva $reserva)
+    {
+        $request->validate([
+            'estado' => 'required|in:pendiente,confirmada,completada,cancelada'
+        ]);
+
+        $this->authorize('update', $reserva);
+        $reserva->update(['estado' => $request->estado]);
+
+        return response()->json(['message' => 'Estado actualizado correctamente', 'reserva' => new ReservaResource($reserva)]);
+    }
+
+    /**
+     * Registra el pago de una reserva.
+     *
+     * POST /api/v1/reservas/{reserva}/pago
+     *
+     * @param  Request  $request
+     * @param  Reserva  $reserva
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function registrarPago(Request $request, Reserva $reserva)
+    {
+        $request->validate([
+            'monto' => 'required|numeric|min:0',
+            'metodo_pago' => 'required|string'
+        ]);
+
+        $this->authorize('update', $reserva);
+        
+        $pago = $reserva->pagos()->create([
+            'monto' => $request->monto,
+            'metodo_pago' => $request->metodo_pago,
+            'estado' => 'completado'
+        ]);
+
+        $reserva->update(['estado' => 'completada']);
+
+        return response()->json([
+            'message' => 'Pago registrado correctamente',
+            'pago' => $pago,
+            'reserva' => new ReservaResource($reserva)
+        ]);
+    }
 }
