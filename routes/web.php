@@ -9,6 +9,7 @@ use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PagoController;
+use App\Http\Controllers\HorarioEstilistaController;
 
 
 // Ruta principal accesible para todos (sin autenticación)
@@ -85,12 +86,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/horarios/{horario}/edit', [HorarioController::class, 'edit'])->name('horarios.edit');
         Route::put('/horarios/{horario}', [HorarioController::class, 'update'])->name('horarios.update');
         Route::delete('/horarios/{horario}', [HorarioController::class, 'destroy'])->name('horarios.destroy');
-        // Asignaciones de horarios a estilistas
-        Route::get('/asignar-horario', [EstilistaController::class, 'vistaAsignarHorarioIndex'])->name('asignar_horario.index');
-        Route::get('/asignar-horario/create/{estilista}', [EstilistaController::class, 'vistaAsignarHorarioForm'])->name('asignar_horario.create');
-        Route::post('/asignar-horario/store/{estilista}', [EstilistaController::class, 'guardarAsignacionHorario'])->name('asignar_horario.store');
-        // Asegúrate de que la ruta espera un parámetro llamado 'id'
-        Route::delete('/dashboard/horarios-estilista/{id}', [EstilistaController::class, 'eliminarHorarioPivote'])->name('horarios_estilista.delete');
+        // Rutas para asignación de horarios
+        Route::get('/asignar-horario', [HorarioEstilistaController::class, 'index'])->name('asignar_horario.index');
+        Route::get('/asignar-horario/obtener-horarios/{estilista}', [HorarioEstilistaController::class, 'obtenerHorariosEstilista'])->name('asignar_horario.obtener');
+        Route::post('/asignar-horario/store', [HorarioEstilistaController::class, 'store'])->name('asignar_horario.store');
+        Route::delete('/asignar-horario/eliminar/{id}', [HorarioEstilistaController::class, 'destroy'])->name('asignar_horario.destroy');
 
         // PAGOS (CRUD)
         Route::get('/pagos', [PagoController::class, 'index'])->name('pagos.index');
