@@ -46,9 +46,10 @@
           </div>
           <div class="mb-4">
             <label class="block text-sm font-medium">Estilista</label>
-            <select name="estilista_id" id="estilista" class="w-full p-2 border rounded-md" disabled>
-              <option value="">Seleccione un estilista</option>
-            </select>
+            <input type="hidden" name="estilista_id" id="estilista_id">
+            <div id="estilistas-grid" class="grid grid-cols-2 gap-4 mt-2">
+              <!-- Los estilistas se cargarán aquí dinámicamente -->
+            </div>
           </div>
         </div>
 
@@ -159,7 +160,7 @@
 
   // Carga de horarios
   function loadHorarios() {
-    const estilistaId = document.getElementById('estilista').value;
+    const estilistaId = document.getElementById('estilista_id').value;
     const servicioId = document.getElementById('servicio').value;
     const fecha = document.getElementById('fecha').value;
     
@@ -241,31 +242,62 @@
     document.getElementById('detalle-precio').innerText = opcionSeleccionada.getAttribute('data-precio') ? 'Precio: $' + opcionSeleccionada.getAttribute('data-precio') : '';
     document.getElementById('detalle-duracion').innerText = opcionSeleccionada.getAttribute('data-duracion') ? 'Duración: ' + opcionSeleccionada.getAttribute('data-duracion') + ' minutos' : '';
 
-    let estilistaSelect = document.getElementById('estilista');
-    estilistaSelect.innerHTML = '<option value="">Cargando estilistas...</option>';
-    estilistaSelect.disabled = true;
+    const estilistaGrid = document.getElementById('estilistas-grid');
+    estilistaGrid.innerHTML = '<p class="col-span-2 text-center text-gray-500">Cargando estilistas...</p>';
     document.getElementById('fecha').disabled = true;
     document.getElementById('perfil-estilista').innerHTML = '<p class="text-sm">Seleccione un estilista para ver su perfil.</p>';
+    document.getElementById('estilista_id').value = '';
 
     axios.get(`/api/v1/reservas/estilistas/${servicioId}`)
       .then(response => {
-        estilistaSelect.innerHTML = '<option value="">Seleccione un estilista</option>';
+        estilistaGrid.innerHTML = '';
         response.data.forEach(estilista => {
-          estilistaSelect.innerHTML += `<option value="${estilista.id}">${estilista.nombre}</option>`;
+          const card = document.createElement('div');
+          card.className = 'estilista-card border rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-colors';
+          card.setAttribute('data-estilista-id', estilista.id);
+          card.innerHTML = `
+            <div class="flex items-center gap-3">
+              <img src="/storage/fotos/${estilista.foto_perfil || 'default.jpg'}" 
+                   alt="Foto de ${estilista.nombre}" 
+                   class="w-16 h-16 rounded-full object-cover">
+              <div>
+                <h4 class="font-medium">${estilista.nombre}</h4>
+              </div>
+            </div>
+          `;
+          
+          card.addEventListener('click', function() {
+            // Remover selección previa
+            document.querySelectorAll('.estilista-card').forEach(c => {
+              c.classList.remove('selected-estilista');
+              c.classList.remove('border-blue-500');
+              c.classList.add('border-gray-200');
+            });
+            
+            // Aplicar selección
+            this.classList.add('selected-estilista');
+            this.classList.remove('border-gray-200');
+            this.classList.add('border-blue-500');
+            
+            // Actualizar input hidden
+            document.getElementById('estilista_id').value = this.getAttribute('data-estilista-id');
+            
+            // Cargar perfil del estilista
+            const estilistaId = this.getAttribute('data-estilista-id');
+            document.getElementById('fecha').disabled = false;
+            cargarPerfilEstilista(estilistaId);
+          });
+          
+          estilistaGrid.appendChild(card);
         });
-        estilistaSelect.disabled = false;
       })
       .catch(error => {
         console.error('Error al obtener estilistas:', error);
-        estilistaSelect.innerHTML = '<option value="">Error al cargar estilistas</option>';
+        estilistaGrid.innerHTML = '<p class="col-span-2 text-center text-red-500">Error al cargar estilistas</p>';
       });
   });
 
-  // Al seleccionar un estilista: cargar perfil y configurar Pikaday
-  document.getElementById('estilista').addEventListener('change', function() {
-    const estilistaId = this.value;
-    document.getElementById('fecha').disabled = false;
-
+  function cargarPerfilEstilista(estilistaId) {
     axios.get(`/api/v1/perfiles/${estilistaId}`)
       .then(response => {
         const perfil = response.data.data;
@@ -281,7 +313,7 @@
         document.getElementById('perfil-estilista').innerHTML = '<p class="text-sm">No se pudo cargar el perfil.</p>';
       });
 
-    // Consultar los días disponibles del estilista (endpoint)
+    // Consultar los días disponibles del estilista
     axios.get(`/api/v1/horarios-estilista/dias-disponibles/${estilistaId}`)
       .then(response => {
         availableDates = response.data;
@@ -305,12 +337,12 @@
       .catch(error => {
         console.error('Error al obtener días de trabajo:', error);
       });
-  });
+  }
 
   // Botones de navegación
   document.getElementById('next-1').addEventListener('click', function() {
     let servicio = document.getElementById('servicio').value;
-    let estilista = document.getElementById('estilista').value;
+    let estilista = document.getElementById('estilista_id').value;
     if (!servicio || !estilista) {
       alert('Debes seleccionar un servicio y un estilista.');
       return;
@@ -332,7 +364,7 @@
       return;
     }
     let servicioText = document.getElementById('servicio').selectedOptions[0].text;
-    let estilistaText = document.getElementById('estilista').selectedOptions[0].text;
+    let estilistaText = document.getElementById('estilistas-grid').querySelector('.selected-estilista').querySelector('h4').innerText;
     document.getElementById('confirm-servicio').innerText = servicioText;
     document.getElementById('confirm-estilista').innerText = estilistaText;
     document.getElementById('confirm-fecha').innerText = fecha;
@@ -391,6 +423,23 @@
     background-color: #3490dc;
     color: white;
     border-color: #3490dc;
+  }
+  /* Estilos para las tarjetas de estilistas */
+  .estilista-card {
+    background-color: white;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+  }
+  
+  .estilista-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  .selected-estilista {
+    background-color: #f0f9ff;
+    border-color: #3490dc !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   }
 </style>
 @endsection
