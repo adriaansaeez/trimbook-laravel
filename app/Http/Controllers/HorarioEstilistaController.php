@@ -7,6 +7,7 @@ use App\Models\Horario;
 use App\Models\HorariosEstilista;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class HorarioEstilistaController extends Controller
 {
@@ -30,13 +31,24 @@ class HorarioEstilistaController extends Controller
             }])->findOrFail($estilistaId);
 
             $horarios = $estilista->horarios->map(function ($horario) {
+                // Formatear las fechas usando Carbon
+                $fechaInicio = Carbon::parse($horario->pivot_fecha_inicio)->format('Y-m-d');
+                $fechaFin = Carbon::parse($horario->pivot_fecha_fin)->format('Y-m-d');
+
+                Log::info('Fechas procesadas:', [
+                    'fecha_inicio_original' => $horario->pivot_fecha_inicio,
+                    'fecha_fin_original' => $horario->pivot_fecha_fin,
+                    'fecha_inicio_formateada' => $fechaInicio,
+                    'fecha_fin_formateada' => $fechaFin
+                ]);
+
                 return [
                     'id' => $horario->id,
                     'nombre' => $horario->nombre,
                     'pivot' => [
                         'id' => $horario->pivot_id,
-                        'fecha_inicio' => $horario->pivot_fecha_inicio,
-                        'fecha_fin' => $horario->pivot_fecha_fin
+                        'fecha_inicio' => $fechaInicio,
+                        'fecha_fin' => $fechaFin
                     ]
                 ];
             });
@@ -66,7 +78,12 @@ class HorarioEstilistaController extends Controller
                 'fecha_fin' => 'required|date|after_or_equal:fecha_inicio'
             ]);
 
-            $asignacion = HorariosEstilista::create($validated);
+            $asignacion = HorariosEstilista::create([
+                'estilista_id' => $validated['estilista_id'],
+                'horario_id' => $validated['horario_id'],
+                'fecha_inicio' => Carbon::parse($validated['fecha_inicio'])->format('Y-m-d'),
+                'fecha_fin' => Carbon::parse($validated['fecha_fin'])->format('Y-m-d')
+            ]);
 
             return response()->json([
                 'success' => true,

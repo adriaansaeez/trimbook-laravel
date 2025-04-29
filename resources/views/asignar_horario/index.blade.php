@@ -169,6 +169,37 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Función auxiliar para formatear fechas
+function formatearFecha(fechaStr) {
+    try {
+        if (!fechaStr) {
+            throw new Error('Fecha no proporcionada');
+        }
+        
+        // La fecha viene en formato YYYY-MM-DD
+        const [año, mes, dia] = fechaStr.split('-').map(num => parseInt(num, 10));
+        if (!año || !mes || !dia) {
+            throw new Error('Formato de fecha inválido');
+        }
+
+        const fecha = new Date(año, mes - 1, dia); // mes - 1 porque en JS los meses van de 0 a 11
+        if (isNaN(fecha.getTime())) {
+            throw new Error('Fecha inválida');
+        }
+
+        const formatoFecha = new Intl.DateTimeFormat('es-ES', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+
+        return formatoFecha.format(fecha);
+    } catch (error) {
+        console.error('Error al formatear fecha:', error, 'Fecha original:', fechaStr);
+        return fechaStr; // Devolver la fecha original en caso de error
+    }
+}
+
 // Función para cargar horarios
 async function cargarHorarios(estilistaId) {
     console.log('Iniciando carga de horarios para estilista:', estilistaId);
@@ -184,13 +215,7 @@ async function cargarHorarios(estilistaId) {
         });
         
         if (!response.ok) {
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                const data = await response.json();
-                throw new Error(data.message || 'Error al cargar los horarios');
-            } else {
-                throw new Error('Error en la respuesta del servidor');
-            }
+            throw new Error('Error en la respuesta del servidor');
         }
 
         const data = await response.json();
@@ -204,23 +229,39 @@ async function cargarHorarios(estilistaId) {
             return;
         }
 
-        const horariosHTML = data.horarios.map(horario => `
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex justify-between items-center">
-                <div>
-                    <h4 class="font-semibold text-lg">${horario.nombre}</h4>
-                    <p class="text-sm text-gray-600">
-                        <span class="font-medium">Desde:</span> ${formatearFecha(horario.pivot.fecha_inicio)} 
-                        <span class="font-medium ml-2">Hasta:</span> ${formatearFecha(horario.pivot.fecha_fin)}
-                    </p>
+        const horariosHTML = data.horarios.map(horario => {
+            console.log('Procesando horario:', horario);
+            console.log('Fechas recibidas:', {
+                inicio: horario.pivot.fecha_inicio,
+                fin: horario.pivot.fecha_fin
+            });
+
+            const fechaInicio = formatearFecha(horario.pivot.fecha_inicio);
+            const fechaFin = formatearFecha(horario.pivot.fecha_fin);
+
+            console.log('Fechas formateadas:', {
+                inicio: fechaInicio,
+                fin: fechaFin
+            });
+
+            return `
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex justify-between items-center">
+                    <div>
+                        <h4 class="font-semibold text-lg">${horario.nombre}</h4>
+                        <p class="text-sm text-gray-600">
+                            <span class="font-medium">Desde:</span> ${fechaInicio} 
+                            <span class="font-medium ml-2">Hasta:</span> ${fechaFin}
+                        </p>
+                    </div>
+                    <button 
+                        onclick="eliminarHorario(${horario.pivot.id})"
+                        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-trash-alt mr-2"></i>
+                        Eliminar
+                    </button>
                 </div>
-                <button 
-                    onclick="eliminarHorario(${horario.pivot.id})"
-                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center">
-                    <i class="fas fa-trash-alt mr-2"></i>
-                    Eliminar
-                </button>
-            </div>
-        `).join('');
+            `;
+        }).join('');
 
         horariosContainer.innerHTML = horariosHTML;
         console.log('Horarios cargados correctamente');
@@ -267,15 +308,6 @@ async function eliminarHorario(pivotId) {
         console.error('Error:', error);
         alert(error.message || 'Error al procesar la solicitud');
     }
-}
-
-// Función auxiliar para formatear fechas
-function formatearFecha(fecha) {
-    return new Date(fecha).toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
 }
 </script>
 @endsection
