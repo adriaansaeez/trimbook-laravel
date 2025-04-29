@@ -182,14 +182,41 @@
           return;
         }
         
-        response.data.forEach(hora => {
-          horasLista.innerHTML += `
-            <label class="flex items-center justify-center p-2 border rounded-full cursor-pointer hover:bg-blue-100 transition-colors">
-              <input type="radio" name="hora" value="${hora}" class="hidden" />
-              <span class="text-sm font-medium">${hora}</span>
-            </label>
-          `;
+        // Separar horas en mañana y tarde
+        const horasMañana = response.data.filter(hora => {
+          const hour = parseInt(hora.split(':')[0]);
+          return hour < 14;
         });
+        
+        const horasTarde = response.data.filter(hora => {
+          const hour = parseInt(hora.split(':')[0]);
+          return hour >= 14;
+        });
+        
+        // Crear contenedor para los bloques
+        horasLista.innerHTML = `
+          <div class="col-span-3 w-full">
+            <h3 class="text-lg font-semibold mb-2 text-center">Mañana</h3>
+            <div class="grid grid-cols-3 gap-2 mb-6" id="horas-mañana">
+              ${horasMañana.map(hora => `
+                <label class="flex items-center justify-center p-2 border rounded-full cursor-pointer hover:bg-blue-100 transition-colors">
+                  <input type="radio" name="hora" value="${hora}" class="hidden" />
+                  <span class="text-sm font-medium">${hora}</span>
+                </label>
+              `).join('')}
+            </div>
+            
+            <h3 class="text-lg font-semibold mb-2 text-center">Tarde</h3>
+            <div class="grid grid-cols-3 gap-2" id="horas-tarde">
+              ${horasTarde.map(hora => `
+                <label class="flex items-center justify-center p-2 border rounded-full cursor-pointer hover:bg-blue-100 transition-colors">
+                  <input type="radio" name="hora" value="${hora}" class="hidden" />
+                  <span class="text-sm font-medium">${hora}</span>
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        `;
 
         // Evento para resaltar la hora seleccionada
         document.querySelectorAll('input[name="hora"]').forEach(input => {

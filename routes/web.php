@@ -25,6 +25,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pagos/home', [PagoController::class, 'home'])->name('pagos.home');
     Route::get('/pagos', [PagoController::class, 'index'])->name('pagos.index');
     Route::get('/pagos/{pago}', [PagoController::class, 'show'])->name('pagos.show');
+    Route::get('/pagos/{pago}/detalles', [PagoController::class, 'getDetalles'])->name('pagos.detalles');
+    Route::get('/pagos/{pago}/pdf', [PagoController::class, 'generarPDF'])->name('pagos.pdf');
     Route::get('/pagos/{pago}/edit', [PagoController::class, 'edit'])->name('pagos.edit');
     Route::post('/pagos', [PagoController::class, 'store'])->name('pagos.store');
     Route::put('/pagos/{pago}', [PagoController::class, 'update'])->name('pagos.update');

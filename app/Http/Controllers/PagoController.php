@@ -328,4 +328,122 @@ class PagoController extends Controller
                 ->withInput();
         }
     }
+
+    /**
+     * Obtiene los detalles de un pago en formato JSON para mostrarlos en un modal
+     */
+    public function getDetalles(Pago $pago)
+    {
+        try {
+            // Verificar autenticación y obtener información del usuario
+            $user = auth()->user();
+            \Log::info('Estado de autenticación:', [
+                'is_authenticated' => auth()->check(),
+                'user_id' => $user ? $user->id : null,
+                'user_email' => $user ? $user->email : null,
+                'session_id' => session()->getId(),
+                'request_path' => request()->path(),
+                'request_method' => request()->method(),
+            ]);
+
+            if (!auth()->check()) {
+                \Log::error('Usuario no autenticado intentando acceder a detalles del pago');
+                return response()->json([
+                    'error' => 'No autorizado',
+                    'message' => 'Debe iniciar sesión para acceder a esta información'
+                ], 401);
+            }
+
+            // Cargar las relaciones necesarias
+            $pago->load(['reserva.servicio', 'reserva.user', 'estilista']);
+            
+            // Verificar que todas las relaciones necesarias existen
+            if (!$pago->reserva) {
+                \Log::error('Reserva no encontrada para el pago: ' . $pago->id);
+                return response()->json([
+                    'error' => 'Reserva no encontrada'
+                ], 404);
+            }
+
+            if (!$pago->reserva->servicio) {
+                \Log::error('Servicio no encontrado para la reserva: ' . $pago->reserva->id);
+                return response()->json([
+                    'error' => 'Servicio no encontrado'
+                ], 404);
+            }
+
+            if (!$pago->reserva->user) {
+                \Log::error('Usuario no encontrado para la reserva: ' . $pago->reserva->id);
+                return response()->json([
+                    'error' => 'Usuario no encontrado'
+                ], 404);
+            }
+
+            if (!$pago->estilista) {
+                \Log::error('Estilista no encontrado para el pago: ' . $pago->id);
+                return response()->json([
+                    'error' => 'Estilista no encontrado'
+                ], 404);
+            }
+            
+            // Formatear las fechas para mostrarlas en el modal
+            $pago->fecha_pago_formatted = $pago->fecha_pago->format('d/m/Y H:i');
+            $pago->reserva->fecha_formatted = $pago->reserva->fecha->format('d/m/Y');
+            
+            // Calcular la diferencia entre el precio del servicio y el importe pagado
+            $diferencia = $pago->importe - $pago->reserva->servicio->precio;
+            
+            return response()->json([
+                'pago' => [
+                    'id' => $pago->id,
+                    'fecha_pago' => $pago->fecha_pago_formatted,
+                    'metodo_pago' => $pago->metodo_pago,
+                    'importe' => number_format($pago->importe, 2),
+                ],
+                'reserva' => [
+                    'id' => $pago->reserva->id,
+                    'fecha' => $pago->reserva->fecha_formatted,
+                    'hora' => $pago->reserva->hora,
+                    'estado' => $pago->reserva->estado,
+                ],
+                'servicio' => [
+                    'nombre' => $pago->reserva->servicio->nombre,
+                    'precio' => number_format($pago->reserva->servicio->precio, 2),
+                    'duracion' => $pago->reserva->servicio->duracion,
+                ],
+                'cliente' => [
+                    'name' => $pago->reserva->user->name,
+                    'email' => $pago->reserva->user->email,
+                ],
+                'estilista' => [
+                    'nombre' => $pago->estilista->nombre,
+                ],
+                'diferencia' => number_format($diferencia, 2),
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error al obtener detalles del pago: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'error' => 'Error al obtener los detalles del pago: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Genera un PDF con los detalles del pago
+     */
+    public function generarPDF(Pago $pago)
+    {
+        $pago->load(['reserva.servicio', 'reserva.user', 'estilista']);
+        
+        // Calcular la diferencia entre el precio del servicio y el importe pagado
+        $diferencia = $pago->importe - $pago->reserva->servicio->precio;
+        
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pagos.pdf', [
+            'pago' => $pago,
+            'diferencia' => $diferencia,
+        ]);
+        
+        return $pdf->download('pago-' . $pago->id . '.pdf');
+    }
 }
