@@ -4,6 +4,8 @@ namespace App\Observers;
 
 use App\Models\User;
 use App\Models\Perfil;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\WelcomeMail;
 
 class UserObserver
 {
@@ -16,6 +18,9 @@ class UserObserver
             'usuario_id' => $user->id,
             'nombre' => $user->username,
         ]);
+
+        Mail::to($user->email)->send(new WelcomeMail($user));
+
     }
 
     /**
