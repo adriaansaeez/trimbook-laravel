@@ -143,12 +143,5 @@ Route::middleware(['auth', 'role:admin|estilista|cliente'])->group(function () {
      Route::patch('/profile', [PerfilController::class, 'update'])->name('perfil.update');
 });
 
-Route::get('/test-mail', function () {
-    Mail::raw('Este es un correo de prueba con Mailgun y Laravel.', function ($message) {
-        $message->to('adriansaezbeltra@gmail.com')->subject('Correo de prueba Mailgun');
-    });
-
-    return 'Correo enviado.';
-});
 
 require __DIR__.'/auth.php';
