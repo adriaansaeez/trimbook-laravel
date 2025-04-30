@@ -1,6 +1,12 @@
 <x-guest-layout>
-    <form method="POST" action="{{ route('password.store') }}">
+    <form method="POST" action="{{ route('password.store') }}" class="mx-52">
         @csrf
+
+        <div class="mb-6">
+            <a href="{{ url('/') }}">
+                <img src="{{ asset('images/trimbook-logo-light-removebg.png') }}" alt="TrimBook Logo" class="h-12">
+            </a>
+        </div>
 
         <!-- Password Reset Token -->
         <input type="hidden" name="token" value="{{ $request->route('token') }}">

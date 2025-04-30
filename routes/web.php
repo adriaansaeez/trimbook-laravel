@@ -10,6 +10,7 @@ use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\HorarioEstilistaController;
+use Illuminate\Support\Facades\Mail;
 
 
 // Ruta principal accesible para todos (sin autenticación)
@@ -140,6 +141,14 @@ Route::middleware(['auth', 'role:admin|estilista|cliente'])->group(function () {
      Route::get('/profile', [PerfilController::class, 'index'])->name('perfil.index');
      Route::get('/profile/edit', [PerfilController::class, 'edit'])->name('perfil.edit');
      Route::patch('/profile', [PerfilController::class, 'update'])->name('perfil.update');
+});
+
+Route::get('/test-mail', function () {
+    Mail::raw('Este es un correo de prueba con Mailgun y Laravel.', function ($message) {
+        $message->to('adriansaezbeltra@gmail.com')->subject('Correo de prueba Mailgun');
+    });
+
+    return 'Correo enviado.';
 });
 
 require __DIR__.'/auth.php';
