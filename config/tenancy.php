@@ -20,7 +20,7 @@ return [
     'central_domains' => [
         '127.0.0.1',
         'localhost',
-        'main.trimbook.tech'
+        'main.trimbook.tech' 
     ],
 
     /**

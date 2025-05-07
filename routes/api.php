@@ -8,11 +8,16 @@ use App\Http\Controllers\Api\ServicioController;
 use App\Http\Controllers\Api\HorarioController;
 use App\Http\Controllers\Api\ReservaController;
 use App\Http\Controllers\Api\PagoController;
+use App\Models\Estilista;
 
 Route::prefix('v1')->group(function () {
     // Rutas de autenticación públicas
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login',    [AuthController::class, 'login']);
+
+    Route::get('/estilistas/{estilista}/servicios', function (Estilista $estilista) {
+        return $estilista->servicios->pluck('id');
+    });
 
     // Rutas protegidas con Sanctum
     Route::middleware('auth:sanctum')->group(function () {
