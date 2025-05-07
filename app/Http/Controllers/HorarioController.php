@@ -11,7 +11,7 @@ class HorarioController extends Controller
 {
     public function index()
     {
-        $horarios = Horario::paginate(10);
+    $horarios = Horario::paginate(10);
         return view('horarios.index', compact('horarios'));
     }
 

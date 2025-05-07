@@ -129,49 +129,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Gráficos -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Gráfico 1: Pagos por día -->
-                    <div class="bg-white rounded-lg shadow-lg">
-                        <div class="p-4 border-b border-gray-200">
-                            <h3 class="text-lg font-semibold text-gray-900">Pagos por Día</h3>
-                        </div>
-                        <div class="p-4 h-[400px] relative">
-                            <canvas id="pagosPorDiaChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Gráfico 2: Pagos por método -->
-                    <div class="bg-white rounded-lg shadow-lg">
-                        <div class="p-4 border-b border-gray-200">
-                            <h3 class="text-lg font-semibold text-gray-900">Pagos por Método</h3>
-                        </div>
-                        <div class="p-4 h-[400px] relative">
-                            <canvas id="pagosPorMetodoChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Gráfico 3: Pagos por estilista -->
-                    <div class="bg-white rounded-lg shadow-lg">
-                        <div class="p-4 border-b border-gray-200">
-                            <h3 class="text-lg font-semibold text-gray-900">Pagos por Estilista</h3>
-                        </div>
-                        <div class="p-4 h-[400px] relative">
-                            <canvas id="pagosPorEstilistaChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Gráfico 4: Pagos por servicio -->
-                    <div class="bg-white rounded-lg shadow-lg">
-                        <div class="p-4 border-b border-gray-200">
-                            <h3 class="text-lg font-semibold text-gray-900">Pagos por Servicio</h3>
-                        </div>
-                        <div class="p-4 h-[400px] relative">
-                            <canvas id="pagosPorServicioChart"></canvas>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
