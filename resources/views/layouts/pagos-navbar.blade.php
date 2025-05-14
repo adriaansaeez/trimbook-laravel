@@ -16,7 +16,7 @@
                     <a href="{{ route('pagos.home') }}" 
                        class="{{ request()->routeIs('pagos.home') ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                         <i class="fas fa-chart-line mr-2"></i>
-                        Dashboard
+                        Inicio
                     </a>
 
                     <a href="{{ route('pagos.index') }}"
