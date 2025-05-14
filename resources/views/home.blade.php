@@ -76,6 +76,15 @@
                                                         </button>
                                                     </form>
                                                 @endif
+                                                
+                                                @if(strtoupper($reserva->estado) === 'CONFIRMADA')
+                                                    <form action="{{ route('reservas.cancelar', $reserva) }}" method="POST" class="inline">
+                                                        @csrf
+                                                        <button type="submit" class="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
+                                                            Cancelar
+                                                        </button>
+                                                    </form>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach

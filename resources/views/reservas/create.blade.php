@@ -85,13 +85,11 @@
           <label class="block text-sm font-medium text-left mb-1">Fecha</label>
           <!-- Ajustamos el ancho del input de fecha a la mitad (o un tamaño fijo) -->
           <input 
-            readonly 
-            type="text" 
+            type="date" 
             name="fecha" 
             id="fecha" 
             class="p-2 border rounded-md max-w-sm" 
             style="width: 50%;" 
-            disabled 
             autocomplete="off"
           >
         </div>

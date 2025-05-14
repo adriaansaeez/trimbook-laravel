@@ -247,18 +247,7 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Función para obtener el lunes de la semana de una fecha dada
-    function getInicioSemana(date) {
-        const dia = date.getDay();
-        const diff = (dia === 0 ? -6 : 1) - dia; // Si es domingo, retrocede 6 días
-        const lunes = new Date(date);
-        lunes.setDate(date.getDate() + diff);
-        lunes.setHours(0, 0, 0, 0);
-        return lunes;
-    }
-
-    // Inicializar con el lunes de la semana actual
-    let inicioSemana = getInicioSemana(new Date());
+    let inicioSemana = new Date();
 
     const esAdmin = @json($esAdmin);
     const esEstilista = @json($esEstilista);
@@ -286,8 +275,30 @@ document.addEventListener('DOMContentLoaded', function () {
         return btn;
     }
 
-    function actualizarCalendario() {
-        const fechaFormateada = inicioSemana.toISOString().split('T')[0];
+    function actualizarCalendario(fechaBase = null) {
+        // Siempre usar el lunes de la semana correspondiente
+        let fechaParaPeticion;
+        if (fechaBase) {
+            // Si hay fecha base, obtener el lunes correspondiente
+            fechaParaPeticion = getMonday(new Date(fechaBase));
+        } else {
+            // Si no hay fecha base, usar el lunes de la semana actual o inicioSemana
+            fechaParaPeticion = inicioSemana ? new Date(inicioSemana) : getMonday(new Date());
+        }
+        
+        // Asegurarnos de que sea un lunes
+        if (fechaParaPeticion.getDay() !== 1) { // 1 = Lunes en JavaScript (0 = Domingo)
+            console.log('La fecha no era lunes, aplicando getMonday');
+            fechaParaPeticion = getMonday(fechaParaPeticion);
+        }
+        
+        // Sumar 1 día para corregir el problema de zona horaria
+        fechaParaPeticion.setDate(fechaParaPeticion.getDate() + 1);
+        
+        const fechaFormateada = fechaParaPeticion.toISOString().split('T')[0];
+        console.log('Fecha enviada al backend (asegurando lunes+1):', fechaFormateada);
+        console.log('Día de la semana enviado:', ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][fechaParaPeticion.getDay()]);
+        
         let url = `/calendario-data?fecha=${fechaFormateada}`;
         if (esAdmin) {
             const estilistaId = document.getElementById('select-estilista').value;
@@ -298,7 +309,14 @@ document.addEventListener('DOMContentLoaded', function () {
         axios.get(url)
             .then(response => {
                 const data = response.data;
-                // Actualizar los días en el calendario
+                console.log('Fecha de inicioSemana recibida del backend:', data.inicioSemana);
+                // El backend SIEMPRE devuelve el lunes de la semana, así que actualiza la variable global
+                // Ajustar por zona horaria: crear la fecha en formato local
+                inicioSemana = new Date(data.inicioSemana + 'T00:00:00');
+                console.log('inicioSemana actualizada a:', inicioSemana.toISOString());
+                console.log('Día de la semana de inicioSemana:', ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][inicioSemana.getDay()]);
+                
+                // Ahora sí, renderiza los encabezados correctamente
                 dias.forEach((dia, index) => {
                     const fechaElement = document.getElementById(`fecha-${dia}`);
                     if (fechaElement) {
@@ -394,23 +412,38 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function getMonday(date) {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = (day === 0 ? -6 : 1) - day;
+        d.setDate(d.getDate() + diff);
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
+
     document.getElementById('btn-semana-anterior').addEventListener('click', () => {
-        inicioSemana.setDate(inicioSemana.getDate() - 7);
-        actualizarCalendario();
+        // Siempre parte del lunes actual (inicioSemana)
+        const nuevaFecha = new Date(inicioSemana);
+        nuevaFecha.setDate(inicioSemana.getDate() - 7);
+        actualizarCalendario(nuevaFecha);
     });
 
     document.getElementById('btn-semana-actual').addEventListener('click', () => {
-        inicioSemana = getInicioSemana(new Date());
-        actualizarCalendario();
+        // Ir a la semana actual (hoy)
+        const hoy = new Date();
+        actualizarCalendario(hoy);
     });
 
     document.getElementById('btn-semana-siguiente').addEventListener('click', () => {
-        inicioSemana.setDate(inicioSemana.getDate() + 7);
-        actualizarCalendario();
+        // Siempre parte del lunes actual (inicioSemana)
+        const nuevaFecha = new Date(inicioSemana);
+        nuevaFecha.setDate(inicioSemana.getDate() + 7);
+        actualizarCalendario(nuevaFecha);
     });
 
-    // Inicializar el calendario
-    actualizarCalendario();
+    // Inicializar el calendario con el lunes de la semana actual
+    inicioSemana = getMonday(new Date());
+    actualizarCalendario(inicioSemana);
 
     document.addEventListener('click', function (e) {
         const td = e.target.closest('td[data-reserva]');
@@ -433,6 +466,8 @@ document.addEventListener('DOMContentLoaded', function () {
         
         document.getElementById('estado-reserva').textContent = reserva.estado;
 
+        // Mostrar formulario de pago si la reserva está pendiente o confirmada
+        // y el usuario es admin o estilista
         if ((['CONFIRMADA', 'PENDIENTE'].includes(reserva.estado)) && (esAdmin || esEstilista)) {
             formPago.classList.remove('hidden');
             document.getElementById('reserva-id').value = reserva.id;

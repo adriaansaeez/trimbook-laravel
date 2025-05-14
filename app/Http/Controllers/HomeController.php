@@ -84,7 +84,7 @@ class HomeController extends Controller
         
         $estilistas = [];
         if ($esAdmin) {
-            $estilistas = \App\Models\Estilista::with('user.perfil')->get();
+            $estilistas = \App\Models\Estilista::all();
         }
         
         return view('home', compact('inicioSemana', 'reservasSemana', 'horasDisponibles', 'estilistaId', 'esEstilista', 'esCliente', 'esAdmin', 'estilistas'));

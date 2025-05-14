@@ -30,15 +30,8 @@ class CalendarioSemanal extends Component
         $this->esAdmin = Auth::user()->hasRole('admin');
         
         // Calcular siempre la fecha de inicio de la semana actual
-        $baseDate = Carbon::now();
-        
-        // Asegurar que la semana comience en lunes (1) en lugar de domingo (0)
-        // Si hoy es domingo, queremos mostrar la semana que comienza el lunes anterior
-        if ($baseDate->dayOfWeek == Carbon::SUNDAY) {
-            $this->inicioSemana = $baseDate->copy()->subWeek()->startOfWeek(Carbon::MONDAY);
-        } else {
-            $this->inicioSemana = $baseDate->copy()->startOfWeek(Carbon::MONDAY);
-        }
+        $baseDate = $inicioSemana ? Carbon::parse($inicioSemana) : Carbon::now();
+        $this->inicioSemana = $baseDate->copy()->startOfWeek(Carbon::MONDAY);
         
         // Si se proporcionan los parámetros, usarlos directamente
         if ($inicioSemana && $reservas && $horasDisponibles) {

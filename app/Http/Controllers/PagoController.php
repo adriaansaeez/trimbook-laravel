@@ -113,6 +113,15 @@ class PagoController extends Controller
             ]);
 
             $reserva = Reserva::findOrFail($request->reserva_id);
+            $user = auth()->user();
+
+            // Verificar permisos: solo admin o estilista asignado
+            if (!$user->hasRole('admin') && (!$user->estilista || $user->estilista->id !== $reserva->estilista_id)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tienes permiso para procesar este pago'
+                ], 403);
+            }
 
             // Verificar si ya fue completada
             if ($reserva->estado === 'COMPLETADA') {

@@ -98,11 +98,12 @@ class ReservaController extends Controller
         ]);
 
         // Crear reserva en BD
+        $fecha = Carbon::parse($request->fecha)->format('Y-m-d');
         $reserva = Reserva::create([
             'user_id'      => auth()->id(),
             'servicio_id'  => $request->servicio_id,
             'estilista_id' => $request->estilista_id,
-            'fecha'        => $request->fecha,
+            'fecha'        => $fecha,
             'hora'         => $request->hora,
         ]);
 
@@ -235,8 +236,8 @@ class ReservaController extends Controller
     {
         $user = auth()->user();
         
-        // Verificar que el usuario es el estilista asignado a la reserva
-        if (!$user->estilista || $user->estilista->id !== $reserva->estilista_id) {
+        // Verificar que el usuario es admin o el estilista asignado a la reserva
+        if (!$user->hasRole('admin') && (!$user->estilista || $user->estilista->id !== $reserva->estilista_id)) {
             return redirect()->back()->with('error', 'No autorizado para completar esta reserva');
         }
 
@@ -252,7 +253,7 @@ class ReservaController extends Controller
             // Crear el pago
             Pago::create([
                 'reserva_id' => $reserva->id,
-                'estilista_id' => $user->estilista->id,
+                'estilista_id' => $reserva->estilista_id, // Usar el estilista de la reserva
                 'metodo_pago' => $request->metodo_pago,
                 'importe' => $request->importe,
                 'fecha_pago' => now(),
@@ -275,8 +276,8 @@ class ReservaController extends Controller
     {
         $user = auth()->user();
         
-        // Verificar que el usuario es el estilista asignado a la reserva
-        if (!$user->estilista || $user->estilista->id !== $reserva->estilista_id) {
+        // Verificar que el usuario es admin o el estilista asignado a la reserva
+        if (!$user->hasRole('admin') && (!$user->estilista || $user->estilista->id !== $reserva->estilista_id)) {
             return redirect()->back()->with('error', 'No autorizado para registrar el pago de esta reserva');
         }
         
@@ -288,7 +289,7 @@ class ReservaController extends Controller
         // Crear el pago
         Pago::create([
             'reserva_id' => $reserva->id,
-            'estilista_id' => $user->estilista->id,
+            'estilista_id' => $reserva->estilista_id, // Usar el estilista de la reserva
             'metodo_pago' => $request->metodo_pago,
             'importe' => $request->importe,
             'fecha_pago' => now(),
