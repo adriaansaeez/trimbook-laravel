@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100 w-full">
+<nav x-data="{ open: false, estadisticasOpen: false }" class="bg-white border-b border-gray-100 w-full">
     <!-- Contenedor principal -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -27,16 +27,41 @@
                         {{ __('Dashboard') }}
                     </x-nav-link>
                     @endrole
+                    
                     @role('admin')
-                    <x-nav-link :href="route('pagos.home')" :active="request()->routeIs('pagos.*')">
+                    <x-nav-link :href="route('pagos.index')" :active="request()->routeIs('pagos.index')">
                         {{ __('Pagos') }}
                     </x-nav-link>
                     @endrole
-                   
+                    
                     <!-- Nuevo botón: Mis Reservas -->
                     <x-nav-link href="/reservas">
                         {{ __('Mis Reservas') }}
                     </x-nav-link>
+                    
+                    <!-- Nuevo dropdown: Estadísticas y Datos -->
+                    @role('admin')
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 transition duration-150 ease-in-out">
+                            {{ __('Estadísticas y Datos') }}
+                            <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="open" @click.away="open = false" class="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                            <div class="py-1">
+                                <a href="{{ route('pagos.home') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    {{ __('Dashboard de Pagos') }}
+                                </a>
+                                <a href="{{ route('reservas.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    {{ __('Dashboard de Reservas') }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    @endrole
+                   
+                    
 
                 </div>
             </div>
@@ -144,9 +169,42 @@
     <!-- Menú de navegación responsivo (mobile) -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" 
-                                   :active="request()->routeIs('dashboard')">
+            @role('estilista|cliente')
+            <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
+                {{ __('Home') }}
+            </x-responsive-nav-link>
+            @endrole
+            
+            @role('admin')
+            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
+            </x-responsive-nav-link>
+            @endrole
+            
+            @role('admin')
+            <x-responsive-nav-link :href="route('pagos.index')" :active="request()->routeIs('pagos.index')">
+                {{ __('Pagos') }}
+            </x-responsive-nav-link>
+            @endrole
+            
+            @role('admin')
+            <div class="pt-2 pb-1 border-t border-gray-200">
+                <div class="font-medium text-base text-gray-800 pl-3">
+                    {{ __('Estadísticas y Datos') }}
+                </div>
+                <div class="mt-1 pl-3">
+                    <x-responsive-nav-link :href="route('pagos.home')" :active="request()->routeIs('pagos.home')">
+                        {{ __('Dashboard de Pagos') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('reservas.dashboard')" :active="request()->routeIs('reservas.dashboard')">
+                        {{ __('Dashboard de Reservas') }}
+                    </x-responsive-nav-link>
+                </div>
+            </div>
+            @endrole
+            
+            <x-responsive-nav-link href="/reservas">
+                {{ __('Mis Reservas') }}
             </x-responsive-nav-link>
         </div>
 

@@ -90,7 +90,7 @@
         <h2 class="section-title">Información de la Reserva</h2>
         <div class="info-grid">
             <div class="label">Cliente:</div>
-            <div class="value">{{ $reserva->user->name }}</div>
+            <div class="value">{{ $reserva->user->username }}</div>
 
             <div class="label">Servicio:</div>
             <div class="value">{{ $reserva->servicio->nombre }}</div>

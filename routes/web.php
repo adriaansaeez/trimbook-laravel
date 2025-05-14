@@ -35,6 +35,10 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/pagos/{pago}', [PagoController::class, 'destroy'])->name('pagos.destroy');
     Route::get('/pagos/export/excel', [PagoController::class, 'exportarExcel'])->name('pagos.export.excel');
     Route::get('/pagos/estadisticas/rango', [PagoController::class, 'estadisticasRango'])->name('pagos.estadisticas.rango');
+    
+    // Rutas de Dashboard de Reservas
+    Route::get('/reservas/dashboard', [ReservaController::class, 'dashboard'])->name('reservas.dashboard');
+    Route::get('/reservas/estadisticas/rango', [ReservaController::class, 'estadisticasRango'])->name('reservas.estadisticas.rango');
 });
 
 // Grupo de rutas protegidas solo para ADMIN

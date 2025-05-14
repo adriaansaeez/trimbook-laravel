@@ -414,7 +414,7 @@ class PagoController extends Controller
         ->groupBy('fecha')
         ->orderBy('fecha')
         ->get();
-        
+
         $fechasFormateadas = $pagosPorDia->map(function($item) {
             return Carbon::parse($item->fecha)->format('d/m');
         })->toArray();
@@ -499,7 +499,7 @@ class PagoController extends Controller
         ->groupBy('estilistas.id', 'estilistas.nombre')
         ->orderBy('total', 'desc')
         ->get();
-        
+
         $pagosPorEstilistaChart = Chartjs::build()
             ->name("pagosPorEstilistaChart")
             ->type("bar")
