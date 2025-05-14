@@ -57,6 +57,7 @@ class ReservaController extends Controller
         if (Reserva::where('estilista_id', $data['estilista_id'])
             ->where('fecha', $data['fecha'])
             ->where('hora', $data['hora'])
+            ->whereNotIn('estado', ['CANCELADA']) // Excluir reservas canceladas
             ->exists()
         ) {
             return response()->json(['message' => 'Hora ya reservada'], 422);
@@ -172,9 +173,11 @@ class ReservaController extends Controller
                         while ($start->lt($end)) {
                             $slot = $start->format('H:i');
             
+                            // Comprobar si existe una reserva activa (no cancelada) para este horario
                             if (!Reserva::where('estilista_id', $estilista_id)
                                 ->where('fecha', $fecha)
                                 ->where('hora', $slot)
+                                ->whereNotIn('estado', ['CANCELADA']) // Excluir reservas canceladas
                                 ->exists()) {
                                 $horarios->push($slot);
                             }

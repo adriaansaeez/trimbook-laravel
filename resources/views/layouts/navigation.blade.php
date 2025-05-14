@@ -6,7 +6,7 @@
             <div class="flex items-center">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" class="text-blue-500">
+                    <a href="{{ route('home') }}" class="text-blue-500">
                         <img src="{{ asset('images/trimbook-logo-light-removebg.png') }}" 
                              alt="Logo TrimBook" class="w-32 h-auto">
                     </a>

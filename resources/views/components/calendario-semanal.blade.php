@@ -48,7 +48,7 @@
         <div class="overflow-x-auto">
             <div class="overflow-y-auto" style="max-height: 80vh;">
                 <table class="min-w-full">
-                    <thead class="sticky top-0 bg-white">
+                    <thead class="sticky top-0 bg-white z-10">
                         <tr>
                             <th class="py-2 px-4 border-b text-left font-semibold text-gray-700">Hora</th>
                             @foreach(['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] as $index => $dia)
@@ -71,15 +71,8 @@
                                         $reserva = $reservas->first(function($r) use ($fechaActual, $hora) {
                                             $fechaReserva = Carbon\Carbon::parse($r->fecha);
                                             $horaReserva = Carbon\Carbon::parse($r->hora)->format('H:i');
-                                            return $fechaReserva->isSameDay($fechaActual) && $horaReserva === $hora;
+                                            return $fechaReserva->isSameDay($fechaActual) && $horaReserva === $hora && $r->estado !== 'CANCELADA';
                                         });
-                                        
-                                        // Calcular la altura de la celda según la duración del servicio
-                                        $altura = 'h-16'; // Altura por defecto (1 hora)
-                                        if ($reserva && $reserva->servicio) {
-                                            $duracion = $reserva->servicio->duracion ?? 60; // Duración en minutos, por defecto 60
-                                            $altura = 'h-' . ($duracion / 30 * 8); // 8px por cada 30 minutos
-                                        }
                                         
                                         // Obtener el nombre del cliente
                                         $nombreCliente = 'Cliente';
@@ -117,7 +110,7 @@
                                             }
                                         }
                                     @endphp
-                                    <td class="py-2 px-4 border-b text-center relative {{ $reserva ? $colorClase : '' }} cursor-pointer" 
+                                    <td class="py-2 px-4 border-b text-center {{ $reserva ? $colorClase : '' }} cursor-pointer overflow-hidden" 
                                         data-dia="{{ $dia }}" 
                                         data-hora="{{ $hora }}"
                                         @if($reserva)
@@ -134,7 +127,7 @@
                                         @endif
                                     >
                                         @if($reserva)
-                                            <div class="text-xs {{ $altura }} flex flex-col justify-center">
+                                            <div class="text-xs flex flex-col justify-center max-h-16 py-1">
                                                 @if($esEstilista)
                                                     <p class="font-medium">{{ $nombreCliente }}</p>
                                                     <p class="text-gray-600">{{ $reserva->servicio->nombre ?? 'Servicio' }}</p>
@@ -366,18 +359,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
             dias.forEach(dia => {
                 const td = document.createElement('td');
-                td.className = 'py-2 px-4 border-b text-center relative';
+                td.className = 'py-2 px-4 border-b text-center overflow-hidden cursor-pointer';
                 td.dataset.dia = dia;
                 td.dataset.hora = hora.hora;
 
                 const reserva = hora.reservas[dia];
-                if (reserva) {
+                if (reserva && reserva.estado !== 'CANCELADA') {
                     const clase = getColorClase(reserva.estado);
-                    td.classList.add(...clase.split(' '), 'cursor-pointer');
+                    td.classList.add(...clase.split(' '));
                     td.dataset.reserva = JSON.stringify(reserva);
 
                     const div = document.createElement('div');
-                    div.className = 'text-xs flex flex-col justify-center';
+                    div.className = 'text-xs flex flex-col justify-center max-h-16 py-1';
 
                     if (esEstilista) {
                         div.innerHTML = `<p class="font-medium">${reserva.cliente}</p><p class="text-gray-600">${reserva.servicio}</p>`;
@@ -574,4 +567,45 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+
+<style>
+  /* Barra de progreso */
+  #progress-bar {
+    font-weight: bold;
+  }
+  #progress-bar .step {
+    width: 32%;
+    text-align: center;
+    padding: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+  }
+  #progress-bar .active {
+    background: #3490dc;
+    color: white;
+  }
+  /* Fecha con z-index */
+  #fecha {
+    position: relative;
+    z-index: 1000;
+  }
+  /* Las celdas del calendario deben tener una altura fija para mantener la consistencia */
+  #calendario-body td {
+    height: 4rem; /* Altura fija para todas las celdas */
+    max-height: 4rem;
+    vertical-align: middle;
+    position: relative;
+  }
+  
+  /* Estilos para limitar el contenido de las celdas de reserva */
+  #calendario-body .overflow-hidden > div {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* Asegurar que la cabecera siempre esté por encima */
+  thead.sticky {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+</style>
 

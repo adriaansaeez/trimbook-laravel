@@ -51,6 +51,7 @@ class HomeController extends Controller
                 'user.perfil', 
                 'estilista.user.perfil'
             ])
+            ->whereNotIn('estado', ['CANCELADA'])
             ->whereBetween('fecha', [$inicioSemana->format('Y-m-d'), $finSemana->format('Y-m-d')]);
         
         // Filtrar según el rol
@@ -136,6 +137,7 @@ class HomeController extends Controller
                 'user.perfil', 
                 'estilista.user.perfil'
             ])
+            ->whereNotIn('estado', ['CANCELADA'])
             ->whereBetween('fecha', [$inicioSemana->format('Y-m-d'), $finSemana->format('Y-m-d')]);
         
         // Filtrar según el rol
@@ -174,7 +176,7 @@ class HomeController extends Controller
                 $reserva = $reservas->first(function($r) use ($fechaActual, $hora) {
                     $fechaReserva = Carbon::parse($r->fecha);
                     $horaReserva = Carbon::parse($r->hora)->format('H:i');
-                    return $fechaReserva->isSameDay($fechaActual) && $horaReserva === $hora;
+                    return $fechaReserva->isSameDay($fechaActual) && $horaReserva === $hora && $r->estado !== 'CANCELADA';
                 });
                 
                 if ($reserva) {

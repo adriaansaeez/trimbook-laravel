@@ -89,6 +89,7 @@ class ReservaController extends Controller
                     if (Reserva::where('estilista_id', $request->estilista_id)
                         ->where('fecha', $request->fecha)
                         ->where('hora', $value)
+                        ->whereNotIn('estado', ['CANCELADA']) // Excluir reservas canceladas
                         ->exists()
                     ) {
                         $fail('La hora seleccionada ya está reservada.');

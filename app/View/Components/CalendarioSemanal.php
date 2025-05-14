@@ -48,23 +48,27 @@ class CalendarioSemanal extends Component
             // Si es estilista, mostrar sus propias reservas
             $this->reservas = Reserva::with('servicio', 'user')
                 ->where('estilista_id', $estilistaId)
+                ->whereNotIn('estado', ['CANCELADA'])
                 ->whereBetween('fecha', [$this->inicioSemana->format('Y-m-d'), $finSemana->format('Y-m-d')])
                 ->get();
         } else if ($this->esCliente) {
             // Si es cliente, mostrar sus propias reservas
             $this->reservas = Reserva::with('servicio', 'estilista.user')
                 ->where('user_id', $this->userId)
+                ->whereNotIn('estado', ['CANCELADA'])
                 ->whereBetween('fecha', [$this->inicioSemana->format('Y-m-d'), $finSemana->format('Y-m-d')])
                 ->get();
         } else if ($this->esAdmin) {
             // Si es admin, mostrar todas las reservas
             $this->reservas = Reserva::with('servicio', 'user', 'estilista.user')
+                ->whereNotIn('estado', ['CANCELADA'])
                 ->whereBetween('fecha', [$this->inicioSemana->format('Y-m-d'), $finSemana->format('Y-m-d')])
                 ->get();
         } else {
             // Por defecto, mostrar las reservas del usuario actual
             $this->reservas = Reserva::with('servicio', 'estilista.user')
                 ->where('user_id', $this->userId)
+                ->whereNotIn('estado', ['CANCELADA'])
                 ->whereBetween('fecha', [$this->inicioSemana->format('Y-m-d'), $finSemana->format('Y-m-d')])
                 ->get();
         }
