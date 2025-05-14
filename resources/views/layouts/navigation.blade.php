@@ -28,7 +28,7 @@
                     </x-nav-link>
                     @endrole
                     @role('admin')
-                    <x-nav-link :href="route('pagos.index')" :active="request()->routeIs('pagos.*')">
+                    <x-nav-link :href="route('pagos.home')" :active="request()->routeIs('pagos.*')">
                         {{ __('Pagos') }}
                     </x-nav-link>
                     @endrole
@@ -45,12 +45,20 @@
             <!-- Reemplazar sm:ms-6 por sm:ml-6, etc. -->
             <div class="hidden sm:flex sm:items-center sm:ml-6">
                 <!-- Botón de Book now -->
+                @role('cliente')
                 <div class="shrink-0 flex items-center md:ml-5 md:mr-3">
-                    <a href="{{ route('reservas.create') }}" 
-                       class="border rounded text-white bg-blue-500 p-1 font-semibold">
-                        Book now
+                    <a href="{{ route('reservas.create') }}"
+                        class="inline-flex items-center space-x-2 rounded-md bg-indigo-500 px-4 py-2 text-sm font-medium text-white shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition">
+                        <!-- Icono de calendario (Heroicon) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 
+                                00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>Book now</span>
                     </a>
                 </div>
+                @endrole
 
                 <!-- Separador vertical -->
                 <div class="w-px h-6 bg-gray-300 mx-2"></div>

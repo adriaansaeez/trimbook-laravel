@@ -16,7 +16,7 @@ class EstilistaController extends Controller
     public function index()
     {
         try {
-            $estilistas = Estilista::with('user')->get();
+            $estilistas = Estilista::with('user')->paginate(10);
             $usuariosEstilistas = User::role('estilista')
                                     ->whereDoesntHave('estilista')
                                     ->get();
