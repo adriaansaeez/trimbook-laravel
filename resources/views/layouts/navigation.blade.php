@@ -38,10 +38,6 @@
                         {{ __('Mis Reservas') }}
                     </x-nav-link>
 
-                    <!-- Nuevo botón: Contacto -->
-                    <x-nav-link href="#">
-                        {{ __('Contacto') }}
-                    </x-nav-link>
                 </div>
             </div>
 

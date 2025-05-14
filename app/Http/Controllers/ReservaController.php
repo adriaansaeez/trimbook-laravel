@@ -201,14 +201,18 @@ class ReservaController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->id !== $reserva->user_id && !$user->hasRole('admin')) {
-            return redirect()->back()->with('error', 'No autorizado');
+        // Permitir cancelar si es admin, dueño de la reserva, o estilista asignado (solo si está confirmada para estilista)
+        if (
+            $user->hasRole('admin') ||
+            $user->id === $reserva->user_id ||
+            ($user->hasRole('estilista') && isset($user->estilista) && $user->estilista->id === $reserva->estilista_id && $reserva->estado === 'CONFIRMADA')
+        ) {
+            $reserva->estado = 'CANCELADA';
+            $reserva->save();
+            return redirect()->back()->with('success', 'Reserva cancelada con éxito');
         }
 
-        $reserva->estado = 'CANCELADA';
-        $reserva->save();
-
-        return redirect()->back()->with('success', 'Reserva cancelada con éxito');
+        return redirect()->back()->with('error', 'No autorizado');
     }
 
     public function confirmar(Reserva $reserva)

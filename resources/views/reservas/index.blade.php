@@ -274,6 +274,17 @@
                                                 </button>
                                             @endif
                                             
+                                            @if($reserva->estado == 'CONFIRMADA' && ((auth()->user()->hasRole('estilista') && auth()->user()->estilista->id == $reserva->estilista_id) || auth()->user()->hasRole('admin')))
+                                                <form action="{{ route('reservas.cancelar', $reserva) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    <button type="submit" class="text-red-600 hover:text-red-900" title="Cancelar (Confirmada)" onclick="return confirm('¿Estás seguro de cancelar esta reserva confirmada?')">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                            
                                             @if($reserva->estado == 'COMPLETADA' && !$reserva->pagada)
                                                 <button type="button" class="text-purple-600 hover:text-purple-900" title="Registrar Pago" onclick="abrirModalPago({{ $reserva->id }}, {{ $reserva->precio }})">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

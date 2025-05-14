@@ -82,7 +82,12 @@ class HomeController extends Controller
             'domingo' => []
         ];
         
-        return view('home', compact('inicioSemana', 'reservasSemana', 'horasDisponibles', 'estilistaId', 'esEstilista', 'esCliente', 'esAdmin'));
+        $estilistas = [];
+        if ($esAdmin) {
+            $estilistas = \App\Models\Estilista::with('user.perfil')->get();
+        }
+        
+        return view('home', compact('inicioSemana', 'reservasSemana', 'horasDisponibles', 'estilistaId', 'esEstilista', 'esCliente', 'esAdmin', 'estilistas'));
     }
     
     /**
@@ -138,6 +143,8 @@ class HomeController extends Controller
             $query->where('estilista_id', $estilistaId);
         } else if ($esCliente) {
             $query->where('user_id', auth()->id());
+        } else if ($esAdmin && $estilistaId) {
+            $query->where('estilista_id', $estilistaId);
         }
         
         // Obtener las reservas
@@ -194,7 +201,10 @@ class HomeController extends Controller
                         'cliente' => $nombreCliente,
                         'estilista' => $nombreEstilista,
                         'servicio' => $reserva->servicio->nombre ?? 'Servicio',
-                        'estado' => $reserva->estado
+                        'fecha' => $reserva->fecha,
+                        'hora' => $reserva->hora,
+                        'estado' => $reserva->estado,
+                        'precio' => $reserva->servicio ? number_format($reserva->servicio->precio, 2, '.', '') : '0.00'
                     ];
                 }
             }

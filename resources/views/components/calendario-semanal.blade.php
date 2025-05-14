@@ -1,21 +1,48 @@
-@props(['estilistaId' => null, 'inicioSemana' => null, 'reservas' => [], 'horasDisponibles' => [], 'esEstilista' => false, 'esCliente' => false, 'esAdmin' => false])
+@props(['estilistaId' => null, 'inicioSemana' => null, 'reservas' => [], 'horasDisponibles' => [], 'esEstilista' => false, 'esCliente' => false, 'esAdmin' => false, 'estilistas' => []])
 
 <div class="relative w-full" id="calendario-container">
     <!-- Calendario (ocupa todo el ancho) -->
     <div class="bg-white rounded-lg shadow-lg p-6 w-full">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-800">Calendario Semanal</h2>
-            <div class="flex space-x-2">
-                <button id="btn-semana-anterior" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <button id="btn-semana-actual" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">
-                    <i class="fas fa-calendar-day"></i> Hoy
-                </button>
-                <button id="btn-semana-siguiente" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Calendario Semanal</h2>
+            @if($esAdmin)
+                <div class="flex items-center justify-between">
+                    <div class="w-1/4">
+                        <label for="select-estilista" class="sr-only">Filtrar por Estilista:</label>
+                        <select id="select-estilista" class="block w-full rounded-md border-gray-300 shadow-sm text-sm py-1 px-2">
+                            <option value="">-- Todos los estilistas --</option>
+                            @foreach($estilistas as $estilista)
+                                <option value="{{ $estilista->id }}" {{ $estilistaId == $estilista->id ? 'selected' : '' }}>
+                                    {{ $estilista->user->perfil->nombre ?? $estilista->nombre }} {{ $estilista->user->perfil->apellidos ?? '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="btn-semana-anterior" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button id="btn-semana-actual" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">
+                            <i class="fas fa-calendar-day"></i> Hoy
+                        </button>
+                        <button id="btn-semana-siguiente" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            @else
+                <div class="flex justify-end space-x-2">
+                    <button id="btn-semana-anterior" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button id="btn-semana-actual" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200">
+                        <i class="fas fa-calendar-day"></i> Hoy
+                    </button>
+                    <button id="btn-semana-siguiente" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            @endif
         </div>
 
         <div class="overflow-x-auto">
@@ -28,7 +55,7 @@
                                 <th class="py-2 px-4 border-b text-center font-semibold text-gray-700">
                                     {{ $dia }}
                                     <div class="text-xs font-normal text-gray-500" id="fecha-{{ strtolower($dia) }}">
-                                        {{ $inicioSemana->copy()->addDays($index)->format('d/m') }}
+                                        {{ $inicioSemana->format('d/m') }}
                                     </div>
                                 </th>
                             @endforeach
@@ -99,8 +126,8 @@
                                             'cliente' => $nombreCliente,
                                             'estilista' => $nombreEstilista,
                                             'servicio' => $reserva->servicio->nombre ?? 'Servicio',
-                                            'fecha' => Carbon\Carbon::parse($reserva->fecha)->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY'),
-                                            'hora' => Carbon\Carbon::parse($reserva->hora)->format('H:i'),
+                                            'fecha' => $reserva->fecha,
+                                            'hora' => $reserva->hora,
                                             'estado' => $reserva->estado,
                                             'precio' => $reserva->servicio ? number_format($reserva->servicio->precio, 2, '.', '') : '0.00'
                                         ]), ENT_QUOTES, 'UTF-8') !!}"
@@ -220,13 +247,19 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Obtener la fecha actual del sistema
-    let fechaActual = new Date();
-    fechaActual.setHours(0, 0, 0, 0);
-    
-    // Variable para almacenar el desplazamiento de semanas
-    let desplazamientoSemanas = 0;
-    
+    // Función para obtener el lunes de la semana de una fecha dada
+    function getInicioSemana(date) {
+        const dia = date.getDay();
+        const diff = (dia === 0 ? -6 : 1) - dia; // Si es domingo, retrocede 6 días
+        const lunes = new Date(date);
+        lunes.setDate(date.getDate() + diff);
+        lunes.setHours(0, 0, 0, 0);
+        return lunes;
+    }
+
+    // Inicializar con el lunes de la semana actual
+    let inicioSemana = getInicioSemana(new Date());
+
     const esAdmin = @json($esAdmin);
     const esEstilista = @json($esEstilista);
     const esCliente = @json($esCliente);
@@ -254,27 +287,26 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function actualizarCalendario() {
-        // Calcular la fecha actual considerando el desplazamiento
-        let fechaCalculada = new Date(fechaActual);
-        fechaCalculada.setDate(fechaCalculada.getDate() + (desplazamientoSemanas * 7));
-        
-        // Formatear la fecha para la API
-        const fechaFormateada = fechaCalculada.toISOString().split('T')[0];
-        
-        axios.get(`/calendario-data?fecha=${fechaFormateada}&desplazamiento=${desplazamientoSemanas}`)
+        const fechaFormateada = inicioSemana.toISOString().split('T')[0];
+        let url = `/calendario-data?fecha=${fechaFormateada}`;
+        if (esAdmin) {
+            const estilistaId = document.getElementById('select-estilista').value;
+            if (estilistaId) {
+                url += `&estilista_id=${estilistaId}`;
+            }
+        }
+        axios.get(url)
             .then(response => {
                 const data = response.data;
-                
                 // Actualizar los días en el calendario
                 dias.forEach((dia, index) => {
                     const fechaElement = document.getElementById(`fecha-${dia}`);
                     if (fechaElement) {
-                        const fecha = new Date(data.inicioSemana);
+                        const fecha = new Date(inicioSemana);
                         fecha.setDate(fecha.getDate() + index);
                         fechaElement.textContent = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
                     }
                 });
-                
                 // Actualizar los eventos
                 if (data.calendario) {
                     actualizarEventos(data.calendario);
@@ -363,17 +395,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     document.getElementById('btn-semana-anterior').addEventListener('click', () => {
-        desplazamientoSemanas--;
+        inicioSemana.setDate(inicioSemana.getDate() - 7);
         actualizarCalendario();
     });
 
     document.getElementById('btn-semana-actual').addEventListener('click', () => {
-        desplazamientoSemanas = 0;
+        inicioSemana = getInicioSemana(new Date());
         actualizarCalendario();
     });
 
     document.getElementById('btn-semana-siguiente').addEventListener('click', () => {
-        desplazamientoSemanas++;
+        inicioSemana.setDate(inicioSemana.getDate() + 7);
         actualizarCalendario();
     });
 
@@ -501,6 +533,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const detallesPanel = document.getElementById('detalles-panel');
         detallesPanel.classList.add('translate-x-full');
     });
+
+    if (esAdmin) {
+        document.getElementById('select-estilista').addEventListener('change', actualizarCalendario);
+    }
 });
 </script>
 
