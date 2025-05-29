@@ -7,6 +7,7 @@ namespace App\View\Components;
 use Illuminate\View\Component;
 use App\Models\Reserva;
 use App\Models\HorariosEstilista;
+use App\Models\Estilista;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -20,6 +21,7 @@ class CalendarioSemanal extends Component
     public $esEstilista;
     public $esCliente;
     public $esAdmin;
+    public $estilistas;
 
     public function __construct($estilistaId = null, $inicioSemana = null, $reservas = null, $horasDisponibles = null)
     {
@@ -28,6 +30,12 @@ class CalendarioSemanal extends Component
         $this->esEstilista = Auth::user()->hasRole('estilista');
         $this->esCliente = Auth::user()->hasRole('cliente');
         $this->esAdmin = Auth::user()->hasRole('admin');
+        
+        // Cargar estilistas si es admin
+        $this->estilistas = collect();
+        if ($this->esAdmin) {
+            $this->estilistas = Estilista::with('user.perfil')->get();
+        }
         
         // Calcular siempre la fecha de inicio de la semana actual
         $baseDate = $inicioSemana ? Carbon::parse($inicioSemana) : Carbon::now();
@@ -59,11 +67,16 @@ class CalendarioSemanal extends Component
                 ->whereBetween('fecha', [$this->inicioSemana->format('Y-m-d'), $finSemana->format('Y-m-d')])
                 ->get();
         } else if ($this->esAdmin) {
-            // Si es admin, mostrar todas las reservas
-            $this->reservas = Reserva::with('servicio', 'user', 'estilista.user')
+            // Si es admin, mostrar reservas según el estilista seleccionado o todas
+            $query = Reserva::with('servicio', 'user', 'estilista.user')
                 ->whereNotIn('estado', ['CANCELADA'])
-                ->whereBetween('fecha', [$this->inicioSemana->format('Y-m-d'), $finSemana->format('Y-m-d')])
-                ->get();
+                ->whereBetween('fecha', [$this->inicioSemana->format('Y-m-d'), $finSemana->format('Y-m-d')]);
+            
+            if ($estilistaId) {
+                $query->where('estilista_id', $estilistaId);
+            }
+            
+            $this->reservas = $query->get();
         } else {
             // Por defecto, mostrar las reservas del usuario actual
             $this->reservas = Reserva::with('servicio', 'estilista.user')
@@ -101,6 +114,15 @@ class CalendarioSemanal extends Component
 
     public function render()
     {
-        return view('components.calendario-semanal');
+        return view('components.calendario-semanal', [
+            'estilistas' => $this->estilistas,
+            'estilistaId' => $this->estilistaId,
+            'inicioSemana' => $this->inicioSemana,
+            'reservas' => $this->reservas,
+            'horasDisponibles' => $this->horasDisponibles,
+            'esEstilista' => $this->esEstilista,
+            'esCliente' => $this->esCliente,
+            'esAdmin' => $this->esAdmin
+        ]);
     }
 }

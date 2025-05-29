@@ -10,7 +10,7 @@
                     <div class="w-1/4">
                         <label for="select-estilista" class="sr-only">Filtrar por Estilista:</label>
                         <select id="select-estilista" class="block w-full rounded-md border-gray-300 shadow-sm text-sm py-1 px-2">
-                            <option value="">-- Todos los estilistas --</option>
+                            <option value="">-- Todas las reservas --</option>
                             @foreach($estilistas as $estilista)
                                 <option value="{{ $estilista->id }}" {{ $estilistaId == $estilista->id ? 'selected' : '' }}>
                                     {{ $estilista->user->perfil->nombre ?? $estilista->nombre }} {{ $estilista->user->perfil->apellidos ?? '' }}
@@ -299,6 +299,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 url += `&estilista_id=${estilistaId}`;
             }
         }
+        console.log('URL de petición al backend:', url);
         axios.get(url)
             .then(response => {
                 const data = response.data;
@@ -436,6 +437,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Inicializar el calendario con el lunes de la semana actual
     inicioSemana = getMonday(new Date());
+    
+    // Si es admin y hay un estilista seleccionado inicialmente, asegurar que el select tenga el valor correcto
+    if (esAdmin) {
+        const selectEstilista = document.getElementById('select-estilista');
+        const estilistaIdInicial = @json($estilistaId);
+        if (selectEstilista && estilistaIdInicial) {
+            selectEstilista.value = estilistaIdInicial;
+            console.log('Estilista inicial seleccionado:', estilistaIdInicial);
+        }
+    }
+    
     actualizarCalendario(inicioSemana);
 
     document.addEventListener('click', function (e) {
@@ -563,7 +575,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     if (esAdmin) {
-        document.getElementById('select-estilista').addEventListener('change', actualizarCalendario);
+        const selectEstilista = document.getElementById('select-estilista');
+        if (selectEstilista) {
+            selectEstilista.addEventListener('change', function() {
+                console.log('Cambiado estilista a:', this.value);
+                // Mantener la misma semana pero cambiar el estilista
+                actualizarCalendario();
+            });
+        }
     }
 });
 </script>

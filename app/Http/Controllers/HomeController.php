@@ -119,17 +119,23 @@ class HomeController extends Controller
         
         $finSemana = $inicioSemana->copy()->endOfWeek();
         
-        // Obtener el ID del estilista del usuario logueado
-        $estilistaId = null;
-        $estilista = Estilista::where('user_id', auth()->id())->first();
-        if ($estilista) {
-            $estilistaId = $estilista->id;
-        }
-        
         // Obtener las reservas para el calendario semanal según el rol del usuario
         $esEstilista = Auth::user()->hasRole('estilista');
         $esCliente = Auth::user()->hasRole('cliente');
         $esAdmin = Auth::user()->hasRole('admin');
+        
+        // Obtener el ID del estilista
+        $estilistaId = null;
+        if ($esAdmin && $request->has('estilista_id')) {
+            // Si es admin y se proporciona estilista_id, usar ese
+            $estilistaId = $request->estilista_id;
+        } else if ($esEstilista) {
+            // Si es estilista, obtener su propio ID
+            $estilista = Estilista::where('user_id', auth()->id())->first();
+            if ($estilista) {
+                $estilistaId = $estilista->id;
+            }
+        }
         
         // Consulta base para las reservas con eager loading de relaciones
         $query = Reserva::with([
