@@ -111,8 +111,8 @@ class ReservaController extends Controller
         ]);
 
 
-        return redirect()->route('reservas.index')
-                        ->with('success', 'Reserva creada correctamente y notificación enviada.');
+        return redirect()->route('home')
+                        ->with('success', 'Reserva creada correctamente.');
     }
 
     public function show(Reserva $reserva)
