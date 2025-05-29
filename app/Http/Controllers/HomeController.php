@@ -126,9 +126,15 @@ class HomeController extends Controller
         
         // Obtener el ID del estilista
         $estilistaId = null;
-        if ($esAdmin && $request->has('estilista_id')) {
+        if ($esAdmin && $request->has('estilista_id') && $request->estilista_id) {
             // Si es admin y se proporciona estilista_id, usar ese
             $estilistaId = $request->estilista_id;
+        } else if ($esAdmin && !$request->has('estilista_id')) {
+            // Si es admin pero no se proporciona estilista_id, usar el primer estilista disponible
+            $primerEstilista = Estilista::first();
+            if ($primerEstilista) {
+                $estilistaId = $primerEstilista->id;
+            }
         } else if ($esEstilista) {
             // Si es estilista, obtener su propio ID
             $estilista = Estilista::where('user_id', auth()->id())->first();
@@ -146,13 +152,22 @@ class HomeController extends Controller
             ->whereNotIn('estado', ['CANCELADA'])
             ->whereBetween('fecha', [$inicioSemana->format('Y-m-d'), $finSemana->format('Y-m-d')]);
         
-        // Filtrar según el rol
+        // Filtrar según el rol - SIEMPRE por estilista cuando es admin
         if ($esEstilista && $estilistaId) {
             $query->where('estilista_id', $estilistaId);
         } else if ($esCliente) {
             $query->where('user_id', auth()->id());
         } else if ($esAdmin && $estilistaId) {
+            // Admin SIEMPRE debe filtrar por estilista específico
             $query->where('estilista_id', $estilistaId);
+        } else if ($esAdmin && !$estilistaId) {
+            // Si no hay estilista disponible, devolver datos vacíos
+            return response()->json([
+                'inicioSemana' => $inicioSemana->format('Y-m-d'),
+                'calendario' => [],
+                'estilistaId' => null,
+                'mensaje' => 'No hay estilistas disponibles'
+            ]);
         }
         
         // Obtener las reservas
@@ -171,61 +186,48 @@ class HomeController extends Controller
         
         // Preparar los datos del calendario
         $calendario = [];
+        
         foreach ($horasDisponibles['lunes'] as $hora) {
-            $horaData = [
+            $fila = [
                 'hora' => $hora,
                 'reservas' => []
             ];
             
-            foreach (['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'] as $index => $dia) {
-                $fechaActual = $inicioSemana->copy()->addDays($index);
-                $reserva = $reservas->first(function($r) use ($fechaActual, $hora) {
-                    $fechaReserva = Carbon::parse($r->fecha);
-                    $horaReserva = Carbon::parse($r->hora)->format('H:i');
-                    return $fechaReserva->isSameDay($fechaActual) && $horaReserva === $hora && $r->estado !== 'CANCELADA';
+            $dias = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+            
+            foreach ($dias as $index => $dia) {
+                $fechaDelDia = $inicioSemana->copy()->addDays($index);
+                
+                // Buscar reserva para esta fecha y hora
+                $reservaDelDia = $reservas->first(function($reserva) use ($fechaDelDia, $hora) {
+                    $fechaReserva = Carbon::parse($reserva->fecha);
+                    $horaReserva = Carbon::parse($reserva->hora)->format('H:i');
+                    return $fechaReserva->isSameDay($fechaDelDia) && $horaReserva === $hora;
                 });
                 
-                if ($reserva) {
-                    // Obtener el nombre del cliente desde el perfil
-                    $nombreCliente = 'Cliente';
-                    if ($reserva->user && $reserva->user->perfil) {
-                        $nombreCliente = $reserva->user->perfil->nombre . ' ' . $reserva->user->perfil->apellidos;
-                    } else if ($reserva->user) {
-                        $nombreCliente = $reserva->user->username;
-                    }
-                    
-                    // Obtener el nombre del estilista desde el perfil
-                    $nombreEstilista = 'Estilista';
-                    if ($reserva->estilista && $reserva->estilista->user && $reserva->estilista->user->perfil) {
-                        $nombreEstilista = $reserva->estilista->user->perfil->nombre . ' ' . $reserva->estilista->user->perfil->apellidos;
-                    } else if ($reserva->estilista && $reserva->estilista->user) {
-                        $nombreEstilista = $reserva->estilista->user->username;
-                    } else if ($reserva->estilista) {
-                        $nombreEstilista = $reserva->estilista->nombre ?? 'Estilista';
-                    }
-                    
-                    $horaData['reservas'][$dia] = [
-                        'id' => $reserva->id,
-                        'cliente' => $nombreCliente,
-                        'estilista' => $nombreEstilista,
-                        'servicio' => $reserva->servicio->nombre ?? 'Servicio',
-                        'fecha' => $reserva->fecha,
-                        'hora' => $reserva->hora,
-                        'estado' => $reserva->estado,
-                        'precio' => $reserva->servicio ? number_format($reserva->servicio->precio, 2, '.', '') : '0.00'
+                if ($reservaDelDia) {
+                    $fila['reservas'][$dia] = [
+                        'id' => $reservaDelDia->id,
+                        'cliente' => $reservaDelDia->user->perfil->nombre ?? $reservaDelDia->user->name,
+                        'estilista' => $reservaDelDia->estilista->user->perfil->nombre ?? $reservaDelDia->estilista->nombre ?? 'Sin asignar',
+                        'servicio' => $reservaDelDia->servicio->nombre ?? 'Sin servicio',
+                        'fecha' => $reservaDelDia->fecha,
+                        'hora' => $reservaDelDia->hora,
+                        'estado' => $reservaDelDia->estado,
+                        'precio' => $reservaDelDia->servicio ? number_format($reservaDelDia->servicio->precio, 2, '.', '') : '0.00'
                     ];
+                } else {
+                    $fila['reservas'][$dia] = null;
                 }
             }
             
-            $calendario[] = $horaData;
+            $calendario[] = $fila;
         }
         
         return response()->json([
             'inicioSemana' => $inicioSemana->format('Y-m-d'),
             'calendario' => $calendario,
-            'esEstilista' => $esEstilista,
-            'esCliente' => $esCliente,
-            'esAdmin' => $esAdmin
+            'estilistaId' => $estilistaId
         ]);
     }
 } 

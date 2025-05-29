@@ -161,5 +161,4 @@ Route::middleware(['auth', 'role:admin|estilista|cliente'])->group(function () {
      Route::patch('/profile', [PerfilController::class, 'update'])->name('perfil.update');
 });
 
-
 require __DIR__.'/auth.php';

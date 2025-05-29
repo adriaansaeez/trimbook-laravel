@@ -13,22 +13,35 @@
         <p class="text-sm text-blue-500">Puedes ver tus reservas en la sección "Mis Reservas" arriba.</p>
     </div>
 
+    <!-- Círculo de carga -->
+    <div id="loading-spinner" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 flex flex-col items-center space-y-4">
+            <div class="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent"></div>
+            <p class="text-gray-700 font-medium">Cargando calendario...</p>
+        </div>
+    </div>
+
     <!-- Calendario (oculto en móviles, visible en tablets y escritorio) -->
-    <div class="hidden md:block bg-white rounded-lg shadow-lg p-6 w-full">
+    <div class="hidden md:block bg-white rounded-lg shadow-lg p-6 w-full" id="calendario-main">
         <div class="mb-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-2">Calendario Semanal</h2>
             @if($esAdmin)
                 <div class="flex items-center justify-between">
                     <div class="w-1/4">
-                        <label for="select-estilista" class="sr-only">Filtrar por Estilista:</label>
-                        <select id="select-estilista" class="block w-full rounded-md border-gray-300 shadow-sm text-sm py-1 px-2">
-                            <option value="">-- Todas las reservas --</option>
-                            @foreach($estilistas as $estilista)
-                                <option value="{{ $estilista->id }}" {{ $estilistaId == $estilista->id ? 'selected' : '' }}>
-                                    {{ $estilista->user->perfil->nombre ?? $estilista->nombre }} {{ $estilista->user->perfil->apellidos ?? '' }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <label for="select-estilista" class="sr-only">Estilista:</label>
+                        @if($estilistas->isNotEmpty())
+                            <select id="select-estilista" class="block w-full rounded-md border-gray-300 shadow-sm text-sm py-1 px-2">
+                                @foreach($estilistas as $estilista)
+                                    <option value="{{ $estilista->id }}" {{ $estilistaId == $estilista->id ? 'selected' : '' }}>
+                                        {{ $estilista->user->perfil->nombre ?? $estilista->nombre }} {{ $estilista->user->perfil->apellidos ?? '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @else
+                            <div class="text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-md border">
+                                No hay estilistas activos
+                            </div>
+                        @endif
                     </div>
                     <div class="flex space-x-2">
                         <button id="btn-semana-anterior" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
@@ -57,121 +70,137 @@
             @endif
         </div>
 
-        <div class="overflow-x-auto">
-            <div class="overflow-y-auto" style="max-height: 80vh;">
-                <table class="min-w-full">
-                    <thead class="sticky top-0 bg-white z-10">
-                        <tr>
-                            <th class="py-2 px-4 border-b text-left font-semibold text-gray-700">Hora</th>
-                            @foreach(['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] as $index => $dia)
-                                <th class="py-2 px-4 border-b text-center font-semibold text-gray-700">
-                                    {{ $dia }}
-                                    <div class="text-xs font-normal text-gray-500" id="fecha-{{ strtolower($dia) }}">
-                                        {{ $inicioSemana->format('d/m') }}
-                                    </div>
-                                </th>
-                            @endforeach
-                        </tr>
-                    </thead>
-                    <tbody id="calendario-body">
-                        @foreach($horasDisponibles['lunes'] as $hora)
+        @if($esAdmin && $estilistas->isEmpty())
+            <!-- Mensaje cuando no hay estilistas -->
+            <div class="text-center py-12">
+                <div class="mx-auto h-24 w-24 text-gray-400 mb-4">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-600 mb-2">No hay estilistas activos</h3>
+                <p class="text-gray-500">Debe crear al menos un estilista para poder ver el calendario.</p>
+                <a href="{{ route('estilistas.create') }}" class="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    Crear Estilista
+                </a>
+            </div>
+        @else
+            <div class="overflow-x-auto">
+                <div class="overflow-y-auto" style="max-height: 80vh;">
+                    <table class="min-w-full">
+                        <thead class="sticky top-0 bg-white z-10">
                             <tr>
-                                <td class="py-2 px-4 border-b text-sm font-medium text-gray-700">{{ $hora }}</td>
-                                @foreach(['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'] as $index => $dia)
-                                    @php
-                                        $fechaActual = $inicioSemana->copy()->addDays($index);
-                                        $reserva = $reservas->first(function($r) use ($fechaActual, $hora) {
-                                            $fechaReserva = Carbon\Carbon::parse($r->fecha);
-                                            $horaReserva = Carbon\Carbon::parse($r->hora)->format('H:i');
-                                            return $fechaReserva->isSameDay($fechaActual) && $horaReserva === $hora && $r->estado !== 'CANCELADA';
-                                        });
-                                        
-                                        // Obtener el nombre del cliente
-                                        $nombreCliente = 'Cliente';
-                                        if ($reserva && $reserva->user && $reserva->user->perfil) {
-                                            $nombreCliente = $reserva->user->perfil->nombre . ' ' . $reserva->user->perfil->apellidos;
-                                        } else if ($reserva && $reserva->user) {
-                                            $nombreCliente = $reserva->user->username;
-                                        }
-                                        
-                                        // Obtener el nombre del estilista
-                                        $nombreEstilista = 'Estilista';
-                                        if ($reserva && $reserva->estilista && $reserva->estilista->user && $reserva->estilista->user->perfil) {
-                                            $nombreEstilista = $reserva->estilista->user->perfil->nombre . ' ' . $reserva->estilista->user->perfil->apellidos;
-                                        } else if ($reserva && $reserva->estilista && $reserva->estilista->user) {
-                                            $nombreEstilista = $reserva->estilista->user->username;
-                                        } else if ($reserva && $reserva->estilista) {
-                                            $nombreEstilista = $reserva->estilista->nombre ?? 'Estilista';
-                                        }
-
-                                        // Determinar el color según el estado
-                                        $colorClase = '';
-                                        if ($reserva) {
-                                            switch(strtoupper($reserva->estado)) {
-                                                case 'CONFIRMADA':
-                                                    $colorClase = 'bg-blue-100 hover:bg-blue-200';
-                                                    break;
-                                                case 'CANCELADA':
-                                                    $colorClase = 'bg-red-100 hover:bg-red-200';
-                                                    break;
-                                                case 'COMPLETADA':
-                                                    $colorClase = 'bg-green-100 hover:bg-green-200';
-                                                    break;
-                                                default:
-                                                    $colorClase = 'bg-gray-100 hover:bg-gray-200';
-                                            }
-                                        }
-                                    @endphp
-                                    <td class="py-2 px-4 border-b text-center {{ $reserva ? $colorClase : '' }} cursor-pointer overflow-hidden" 
-                                        data-dia="{{ $dia }}" 
-                                        data-hora="{{ $hora }}"
-                                        @if($reserva)
-                                        data-reserva="{!! htmlspecialchars(json_encode([
-                                            'id' => $reserva->id,
-                                            'cliente' => $nombreCliente,
-                                            'estilista' => $nombreEstilista,
-                                            'servicio' => $reserva->servicio->nombre ?? 'Servicio',
-                                            'fecha' => $reserva->fecha,
-                                            'hora' => $reserva->hora,
-                                            'estado' => $reserva->estado,
-                                            'precio' => $reserva->servicio ? number_format($reserva->servicio->precio, 2, '.', '') : '0.00'
-                                        ]), ENT_QUOTES, 'UTF-8') !!}"
-                                        @endif
-                                    >
-                                        @if($reserva)
-                                            <div class="text-xs flex flex-col justify-center max-h-16 py-1">
-                                                @if($esEstilista)
-                                                    <p class="font-medium">{{ $nombreCliente }}</p>
-                                                    <p class="text-gray-600">{{ $reserva->servicio->nombre ?? 'Servicio' }}</p>
-                                                @elseif($esCliente)
-                                                    <p class="font-medium">{{ $nombreEstilista }}</p>
-                                                    <p class="text-gray-600">{{ $reserva->servicio->nombre ?? 'Servicio' }}</p>
-                                                @elseif($esAdmin)
-                                                    <p class="font-medium">Cliente: {{ $nombreCliente }}</p>
-                                                    <p class="font-medium">Estilista: {{ $nombreEstilista }}</p>
-                                                    <p class="text-gray-600">{{ $reserva->servicio->nombre ?? 'Servicio' }}</p>
-                                                @endif
-                                                
-                                                @if($reserva->estado === 'CONFIRMADA')
-                                                    <div class="mt-1 flex justify-center space-x-1">
-                                                        <form action="{{ route('reservas.cancelar', $reserva) }}" method="POST" class="inline">
-                                                            @csrf
-                                                            <button type="submit" class="text-xs bg-red-500 text-white px-1 py-0.5 rounded hover:bg-red-600">
-                                                                Cancelar
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        @endif
-                                    </td>
+                                <th class="py-2 px-4 border-b text-left font-semibold text-gray-700">Hora</th>
+                                @foreach(['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] as $index => $dia)
+                                    <th class="py-2 px-4 border-b text-center font-semibold text-gray-700">
+                                        {{ $dia }}
+                                        <div class="text-xs font-normal text-gray-500" id="fecha-{{ strtolower($dia) }}">
+                                            {{ $inicioSemana->format('d/m') }}
+                                        </div>
+                                    </th>
                                 @endforeach
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody id="calendario-body">
+                            @foreach($horasDisponibles['lunes'] ?? [] as $hora)
+                                <tr>
+                                    <td class="py-2 px-4 border-b text-sm font-medium text-gray-700">{{ $hora }}</td>
+                                    @foreach(['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'] as $index => $dia)
+                                        @php
+                                            $fechaActual = $inicioSemana->copy()->addDays($index);
+                                            $reserva = $reservas->first(function($r) use ($fechaActual, $hora) {
+                                                $fechaReserva = Carbon\Carbon::parse($r->fecha);
+                                                $horaReserva = Carbon\Carbon::parse($r->hora)->format('H:i');
+                                                return $fechaReserva->isSameDay($fechaActual) && $horaReserva === $hora && $r->estado !== 'CANCELADA';
+                                            });
+                                            
+                                            // Obtener el nombre del cliente
+                                            $nombreCliente = 'Cliente';
+                                            if ($reserva && $reserva->user && $reserva->user->perfil) {
+                                                $nombreCliente = $reserva->user->perfil->nombre . ' ' . $reserva->user->perfil->apellidos;
+                                            } else if ($reserva && $reserva->user) {
+                                                $nombreCliente = $reserva->user->username;
+                                            }
+                                            
+                                            // Obtener el nombre del estilista
+                                            $nombreEstilista = 'Estilista';
+                                            if ($reserva && $reserva->estilista && $reserva->estilista->user && $reserva->estilista->user->perfil) {
+                                                $nombreEstilista = $reserva->estilista->user->perfil->nombre . ' ' . $reserva->estilista->user->perfil->apellidos;
+                                            } else if ($reserva && $reserva->estilista && $reserva->estilista->user) {
+                                                $nombreEstilista = $reserva->estilista->user->username;
+                                            } else if ($reserva && $reserva->estilista) {
+                                                $nombreEstilista = $reserva->estilista->nombre ?? 'Estilista';
+                                            }
+
+                                            // Determinar el color según el estado
+                                            $colorClase = '';
+                                            if ($reserva) {
+                                                switch(strtoupper($reserva->estado)) {
+                                                    case 'CONFIRMADA':
+                                                        $colorClase = 'bg-blue-100 hover:bg-blue-200';
+                                                        break;
+                                                    case 'CANCELADA':
+                                                        $colorClase = 'bg-red-100 hover:bg-red-200';
+                                                        break;
+                                                    case 'COMPLETADA':
+                                                        $colorClase = 'bg-green-100 hover:bg-green-200';
+                                                        break;
+                                                    default:
+                                                        $colorClase = 'bg-gray-100 hover:bg-gray-200';
+                                                }
+                                            }
+                                        @endphp
+                                        <td class="py-2 px-4 border-b text-center {{ $reserva ? $colorClase : '' }} cursor-pointer overflow-hidden" 
+                                            data-dia="{{ $dia }}" 
+                                            data-hora="{{ $hora }}"
+                                            @if($reserva)
+                                            data-reserva="{!! htmlspecialchars(json_encode([
+                                                'id' => $reserva->id,
+                                                'cliente' => $nombreCliente,
+                                                'estilista' => $nombreEstilista,
+                                                'servicio' => $reserva->servicio->nombre ?? 'Servicio',
+                                                'fecha' => $reserva->fecha,
+                                                'hora' => $reserva->hora,
+                                                'estado' => $reserva->estado,
+                                                'precio' => $reserva->servicio ? number_format($reserva->servicio->precio, 2, '.', '') : '0.00'
+                                            ]), ENT_QUOTES, 'UTF-8') !!}"
+                                            @endif
+                                        >
+                                            @if($reserva)
+                                                <div class="text-xs flex flex-col justify-center max-h-16 py-1">
+                                                    @if($esEstilista)
+                                                        <p class="font-medium">{{ $nombreCliente }}</p>
+                                                        <p class="text-gray-600">{{ $reserva->servicio->nombre ?? 'Servicio' }}</p>
+                                                    @elseif($esCliente)
+                                                        <p class="font-medium">{{ $nombreEstilista }}</p>
+                                                        <p class="text-gray-600">{{ $reserva->servicio->nombre ?? 'Servicio' }}</p>
+                                                    @elseif($esAdmin)
+                                                        <p class="font-medium">Cliente: {{ $nombreCliente }}</p>
+                                                        <p class="font-medium">Estilista: {{ $nombreEstilista }}</p>
+                                                        <p class="text-gray-600">{{ $reserva->servicio->nombre ?? 'Servicio' }}</p>
+                                                    @endif
+                                                    
+                                                    @if($reserva->estado === 'CONFIRMADA')
+                                                        <div class="mt-1 flex justify-center space-x-1">
+                                                            <form action="{{ route('reservas.cancelar', $reserva) }}" method="POST" class="inline">
+                                                                @csrf
+                                                                <button type="submit" class="text-xs bg-red-500 text-white px-1 py-0.5 rounded hover:bg-red-600">
+                                                                    Cancelar
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        @endif
     </div>
 
     <!-- Panel de detalles flotante (inicialmente oculto) -->
@@ -280,7 +309,56 @@ document.addEventListener('DOMContentLoaded', function () {
         return btn;
     }
 
+    function mostrarSpinner() {
+        document.getElementById('loading-spinner').classList.remove('hidden');
+        deshabilitarBotones();
+    }
+
+    function ocultarSpinner() {
+        document.getElementById('loading-spinner').classList.add('hidden');
+        habilitarBotones();
+    }
+
+    function deshabilitarBotones() {
+        const botones = [
+            'btn-semana-anterior', 
+            'btn-semana-actual', 
+            'btn-semana-siguiente',
+            'select-estilista'
+        ];
+        
+        botones.forEach(id => {
+            const elemento = document.getElementById(id);
+            if (elemento) {
+                elemento.disabled = true;
+                elemento.style.opacity = '0.6';
+                elemento.style.cursor = 'not-allowed';
+            }
+        });
+    }
+
+    function habilitarBotones() {
+        const botones = [
+            'btn-semana-anterior', 
+            'btn-semana-actual', 
+            'btn-semana-siguiente',
+            'select-estilista'
+        ];
+        
+        botones.forEach(id => {
+            const elemento = document.getElementById(id);
+            if (elemento) {
+                elemento.disabled = false;
+                elemento.style.opacity = '1';
+                elemento.style.cursor = 'pointer';
+            }
+        });
+    }
+
     function actualizarCalendario(fechaBase = null) {
+        // Mostrar spinner al inicio de la petición
+        mostrarSpinner();
+        
         // Siempre usar el lunes de la semana correspondiente
         let fechaParaPeticion;
         if (fechaBase) {
@@ -306,9 +384,12 @@ document.addEventListener('DOMContentLoaded', function () {
         
         let url = `/calendario-data?fecha=${fechaFormateada}`;
         if (esAdmin) {
-            const estilistaId = document.getElementById('select-estilista').value;
-            if (estilistaId) {
-                url += `&estilista_id=${estilistaId}`;
+            const selectEstilista = document.getElementById('select-estilista');
+            if (selectEstilista) {
+                const estilistaId = selectEstilista.value;
+                if (estilistaId) {
+                    url += `&estilista_id=${estilistaId}`;
+                }
             }
         }
         console.log('URL de petición al backend:', url);
@@ -338,25 +419,40 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(error => {
                 console.error('Error al actualizar el calendario:', error);
+                alert('Error al cargar el calendario. Por favor, inténtelo de nuevo.');
+            })
+            .finally(() => {
+                // Ocultar spinner siempre al final, tanto en éxito como en error
+                ocultarSpinner();
             });
     }
 
     function confirmarReserva(id) {
+        mostrarSpinner();
         axios.post(`/reservas/${id}/confirmar`)
             .then(() => {
                 alert('Reserva confirmada');
                 actualizarCalendario();
             })
-            .catch(err => alert('Error al confirmar reserva'));
+            .catch(err => {
+                console.error('Error al confirmar reserva:', err);
+                alert('Error al confirmar reserva');
+                ocultarSpinner();
+            });
     }
 
     function cancelarReserva(id) {
+        mostrarSpinner();
         axios.post(`/reservas/${id}/cancelar`)
             .then(() => {
                 alert('Reserva cancelada');
                 actualizarCalendario();
             })
-            .catch(err => alert('Error al cancelar reserva'));
+            .catch(err => {
+                console.error('Error al cancelar reserva:', err);
+                alert('Error al cancelar reserva');
+                ocultarSpinner();
+            });
     }
 
     function actualizarEventos(eventos) {
@@ -450,13 +546,24 @@ document.addEventListener('DOMContentLoaded', function () {
     // Inicializar el calendario con el lunes de la semana actual
     inicioSemana = getMonday(new Date());
     
-    // Si es admin y hay un estilista seleccionado inicialmente, asegurar que el select tenga el valor correcto
+    // Mostrar spinner durante la carga inicial
+    mostrarSpinner();
+    
+    // Si es admin, asegurar que hay un estilista seleccionado
     if (esAdmin) {
         const selectEstilista = document.getElementById('select-estilista');
         const estilistaIdInicial = @json($estilistaId);
-        if (selectEstilista && estilistaIdInicial) {
-            selectEstilista.value = estilistaIdInicial;
-            console.log('Estilista inicial seleccionado:', estilistaIdInicial);
+        
+        if (selectEstilista) {
+            // Si hay un estilista inicial, seleccionarlo
+            if (estilistaIdInicial) {
+                selectEstilista.value = estilistaIdInicial;
+                console.log('Estilista inicial seleccionado:', estilistaIdInicial);
+            } else if (selectEstilista.options.length > 0) {
+                // Si no hay estilista inicial pero hay opciones, seleccionar la primera
+                selectEstilista.selectedIndex = 0;
+                console.log('Seleccionado primer estilista disponible:', selectEstilista.value);
+            }
         }
     }
     
@@ -546,6 +653,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('pago-form').addEventListener('submit', function (e) {
         e.preventDefault();
+        mostrarSpinner();
+        
         const formData = new FormData(this);
         const metodoPago = document.getElementById('metodo-pago').value;
         
@@ -577,6 +686,9 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(err => {
                 console.error(err);
                 alert('Error al procesar el pago');
+            })
+            .finally(() => {
+                ocultarSpinner();
             });
     });
 
@@ -637,6 +749,34 @@ document.addEventListener('DOMContentLoaded', function () {
   /* Asegurar que la cabecera siempre esté por encima */
   thead.sticky {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Estilos para el spinner de carga */
+  #loading-spinner {
+    backdrop-filter: blur(4px);
+    transition: opacity 0.3s ease-in-out;
+  }
+
+  /* Transición suave para el contenido del calendario */
+  #calendario-main {
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  /* Animación personalizada para el spinner */
+  @keyframes spin-pulse {
+    0% {
+      transform: rotate(0deg) scale(1);
+    }
+    50% {
+      transform: rotate(180deg) scale(1.1);
+    }
+    100% {
+      transform: rotate(360deg) scale(1);
+    }
+  }
+
+  .animate-spin-pulse {
+    animation: spin-pulse 1s linear infinite;
   }
 </style>
 

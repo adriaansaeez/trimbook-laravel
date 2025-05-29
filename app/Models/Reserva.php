@@ -9,7 +9,7 @@ class Reserva extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'servicio_id', 'estilista_id', 'fecha', 'hora', 'estado'];
+    protected $fillable = ['user_id', 'servicio_id', 'estilista_id', 'fecha', 'hora', 'estado', 'recordatorio_enviado', 'recordatorio_enviado_at'];
 
     // Establecer el estado por defecto como CONFIRMADA
     protected $attributes = [

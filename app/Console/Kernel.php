@@ -9,11 +9,18 @@ class Kernel extends ConsoleKernel
 {
     protected $commands = [
         \App\Console\Commands\CreateTenant::class,
+        \App\Console\Commands\EnviarRecordatoriosReservas::class,
     ];
 
     protected function schedule(Schedule $schedule): void
     {
-        // Define tareas programadas aquí si las necesitas
+        // Enviar recordatorios de reservas todos los días a las 10:00 AM
+        $schedule->command('reservas:enviar-recordatorios')
+                 ->dailyAt('10:00')
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->emailOutputOnFailure('admin@trimbook.com')
+                 ->appendOutputTo(storage_path('logs/recordatorios.log'));
     }
 
     protected function commands(): void

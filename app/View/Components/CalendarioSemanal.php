@@ -25,7 +25,6 @@ class CalendarioSemanal extends Component
 
     public function __construct($estilistaId = null, $inicioSemana = null, $reservas = null, $horasDisponibles = null)
     {
-        $this->estilistaId = $estilistaId;
         $this->userId = Auth::id();
         $this->esEstilista = Auth::user()->hasRole('estilista');
         $this->esCliente = Auth::user()->hasRole('cliente');
@@ -35,7 +34,14 @@ class CalendarioSemanal extends Component
         $this->estilistas = collect();
         if ($this->esAdmin) {
             $this->estilistas = Estilista::with('user.perfil')->get();
+            
+            // Si no se proporciona estilistaId pero hay estilistas disponibles, usar el primero
+            if (!$estilistaId && $this->estilistas->isNotEmpty()) {
+                $estilistaId = $this->estilistas->first()->id;
+            }
         }
+        
+        $this->estilistaId = $estilistaId;
         
         // Calcular siempre la fecha de inicio de la semana actual
         $baseDate = $inicioSemana ? Carbon::parse($inicioSemana) : Carbon::now();
@@ -67,13 +73,21 @@ class CalendarioSemanal extends Component
                 ->whereBetween('fecha', [$this->inicioSemana->format('Y-m-d'), $finSemana->format('Y-m-d')])
                 ->get();
         } else if ($this->esAdmin) {
-            // Si es admin, mostrar reservas según el estilista seleccionado o todas
+            // Si es admin, siempre filtrar por un estilista específico
             $query = Reserva::with('servicio', 'user', 'estilista.user')
                 ->whereNotIn('estado', ['CANCELADA'])
                 ->whereBetween('fecha', [$this->inicioSemana->format('Y-m-d'), $finSemana->format('Y-m-d')]);
             
+            // SIEMPRE filtrar por estilista cuando es admin
             if ($estilistaId) {
                 $query->where('estilista_id', $estilistaId);
+            } else {
+                // Si no hay estilista, devolver colección vacía
+                $this->reservas = collect();
+                $this->horasDisponibles = [
+                    'lunes' => [], 'martes' => [], 'miércoles' => [], 'jueves' => [], 'viernes' => [], 'sábado' => [], 'domingo' => []
+                ];
+                return;
             }
             
             $this->reservas = $query->get();
