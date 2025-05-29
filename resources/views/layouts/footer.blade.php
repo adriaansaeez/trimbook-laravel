@@ -4,9 +4,9 @@
             &copy; {{ date('Y') }} TrimBook. Todos los derechos reservados.
         </p>
         <div class="flex space-x-4 mt-4 md:mt-0">
-            <a href="" class="text-sm hover:text-white transition-colors">Política de Privacidad</a>
-            <a href="" class="text-sm hover:text-white transition-colors">Términos y Condiciones</a>
-            <a href="" class="text-sm hover:text-white transition-colors">Contacto</a>
+            <a href="{{ route('privacy-policy') }}" class="text-sm hover:text-white transition-colors">Política de Privacidad</a>
+            <a href="{{ route('terms-conditions') }}" class="text-sm hover:text-white transition-colors">Términos y Condiciones</a>
+            <a href="/#contacto" class="text-sm hover:text-white transition-colors">Contacto</a>
         </div>
     </div>
 </footer>

@@ -10,6 +10,7 @@ use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\HorarioEstilistaController;
+use App\Http\Controllers\ContactController;
 use Illuminate\Support\Facades\Mail;
 
 
@@ -17,6 +18,18 @@ use Illuminate\Support\Facades\Mail;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Ruta para el formulario de contacto (sin autenticación)
+Route::post('/contacto', [ContactController::class, 'store'])->name('contacto.store');
+
+// Rutas para páginas legales (sin autenticación)
+Route::get('/politica-privacidad', function () {
+    return view('privacy-policy');
+})->name('privacy-policy');
+
+Route::get('/terminos-condiciones', function () {
+    return view('terms-conditions');
+})->name('terms-conditions');
 
 // Ruta de inicio para usuarios autenticados
 Route::middleware(['auth'])->group(function () {
